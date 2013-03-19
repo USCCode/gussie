@@ -83,10 +83,10 @@ window.turtles = new Turtleset
 window.patches = 0
 patches = window.patches
 
-patches_width = 10
-patches_height = 10
-max_pxcor = 40
-max_pycor = 40 
+patches_width = 1
+patches_height = 1
+max_pxcor = 400
+max_pycor = 400
 
 
 class Patch extends Turtle
@@ -114,12 +114,14 @@ class Patch extends Turtle
 
 # Create all the patches, set window.patches variable 
 create_patches = () ->
-    w = patches_width * max_pxcor;
-    h = patches_height * max_pycor;
-    $('#canvas').width(w);
-    $('#canvas').height(h);
+    w = patches_width * max_pxcor
+    h = patches_height * max_pycor
+    $('#canvas').attr('width',w) #setting it in CSS (.width()) does not work!
+    $('#canvas').attr('height',h)
     #create all the patches
     window.patches = new Turtleset
+    patchTable = {}
+    console.log('making patches')
     for x in [0...max_pxcor]
         for y in [0...max_pycor]
             p = new Patch(x,y)
@@ -131,8 +133,10 @@ create_patches = () ->
             p.pcycor_end = p.pcycor + patches_height
             p.xcor = p.pcxcor + (patches_width / 2)
             p.ycor = p.pcycor + (patches_height / 2)
+            patchTable[p.pxcor + " " + p.pycor] = p
             window.patches.add p
     #set each patch's neighbors
+    console.log('setting neighbors')
     patches = window.patches
     patches.do ->
         myPxcor = @pxcor
@@ -143,16 +147,24 @@ create_patches = () ->
         myPycorM1 = myPycor - 1
         myPycorM1 = (max_pycor - 1) if myPycorM1 < 0
         myPycorP1 = (myPycor + 1) % max_pycor
-        @neighbors = patches.with( ->
-            (@pxcor == myPxcorM1 and @pycor == myPycor) or
-            (@pxcor == myPxcorP1 and @pycor == myPycor) or
-            (@pxcor == myPxcor and @pycor == myPycorM1) or
-            (@pxcor == myPxcor and @pycor == myPycorP1) or
-            (@pxcor == myPxcorM1 and @pycor == myPycorM1) or
-            (@pxcor == myPxcorM1 and @pycor == myPycorP1) or
-            (@pxcor == myPxcorP1 and @pycor == myPycorM1) or
-            (@pxcor == myPxcorP1 and @pycor == myPycorP1))
-        
+        @neighbors = new Turtleset([patchTable[myPxcorM1 + " " + myPycor],
+            patchTable[myPxcorP1 + " " + myPycor],
+            patchTable[myPxcor + " " + myPycorM1],
+            patchTable[myPxcor + " " +  myPycorP1],
+            patchTable[myPxcorM1 + " " + myPycorM1],
+            patchTable[myPxcorM1 + " " + myPycorP1],
+            patchTable[myPxcorP1 + " " + myPycorM1],
+            patchTable[myPxcorP1 + " " + myPycorP1] ] )
+        # @neighbors = patches.with( ->
+        #     (@pxcor == myPxcorM1 and @pycor == myPycor) or
+        #     (@pxcor == myPxcorP1 and @pycor == myPycor) or
+        #     (@pxcor == myPxcor and @pycor == myPycorM1) or
+        #     (@pxcor == myPxcor and @pycor == myPycorP1) or
+        #     (@pxcor == myPxcorM1 and @pycor == myPycorM1) or
+        #     (@pxcor == myPxcorM1 and @pycor == myPycorP1) or
+        #     (@pxcor == myPxcorP1 and @pycor == myPycorM1) or
+        #     (@pxcor == myPxcorP1 and @pycor == myPycorP1))
+
             
 
 #for testing
@@ -168,8 +180,11 @@ redraw = () ->
     patches.draw()
     turtles.draw()
 
+# User stuff below...or so that is the plan................................................
+#
+#
+
 go = ->
-    console.log 'go'
     patches.do ->
         @calculate()
     patches.do ->
@@ -181,9 +196,6 @@ go = ->
 goHandler = () ->
     if $('#goButton').prop('checked')
         go()
-
-# User stuff below...or so that is the plan
-#
 
 #This is how we add a method to an existing class.
 Patch::calculate = ->
@@ -210,7 +222,7 @@ $(document).ready( () ->
             @pcolor = if Math.random() < .5  then color.black else color.white
         redraw()
     )
-    
 
     $('#goButton').on('click', goHandler)
+    console.log('all systems go')
 )
