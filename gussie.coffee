@@ -5,6 +5,11 @@
 canvas = 0
 context = 0
 who = 0
+color = {
+    black: "#000000",
+    white: "#FFFFFF"
+    }
+
 
 class Turtle
     constructor: ->
@@ -12,7 +17,7 @@ class Turtle
         @ycor = 100
         @heading = 0
         @who = who++
-        @color = "#000000"
+        @color = color.white
         turtles.add(@)
 
     draw: ->
@@ -94,7 +99,7 @@ class Patch extends Turtle
         @pcycor = 0
         @pcxcor_end = 0 #the bottom-right point (used for drawing)
         @pcycor_end = 0
-        @pcolor = "#FFFFFF"
+        @pcolor = color.white
         @neighbors = []  #a turtleset with my neighbors
 
     draw: ->
@@ -162,29 +167,20 @@ redraw = () ->
     context.clearRect(0,0,canvas.width(), canvas.height())
     patches.draw()
     turtles.draw()
-    if (animate)
-        setTimeout(redraw, 100)
 
-#update the model
-update = () ->
-    for turtle in turtles
-        turtle.update
-    for patch in window.patches
-        patch.update
-
-go = () ->
-    update
+go = ->
+    console.log 'go'
+    patches.do ->
+        @calculate()
+    patches.do ->
+        @pcolor = @nextColor
+    redraw()
     if $('#goButton').prop('checked')
-        setTimeout(go, 10)
+        setTimeout go,0
 
 goHandler = () ->
     if $('#goButton').prop('checked')
         go()
-
-color = {
-    black: "#000000",
-    white: "#FFFFFF"
-    }
 
 # User stuff below...or so that is the plan
 #
@@ -202,24 +198,19 @@ Patch::calculate = ->
         if numLiveNeighbors == 3 
             @nextColor = color.black #live!
 
-window.go = ->
-    console.log 'go'
-    patches.do ->
-        @calculate()
-    patches.do ->
-        @pcolor = @nextColor
-
 $(document).ready( () ->
     console.log('ready')
     canvas = $('canvas')
     context = canvas[0].getContext('2d')
     create_patches()
-    redraw()
-    # t = create_turtles(10)
+        # t = create_turtles(10)
 
-    patches.do ->
-        @pcolor = if Math.random() < .5  then color.black else color.white
+    $('#setupButton').on('click', ->
+        patches.do ->
+            @pcolor = if Math.random() < .5  then color.black else color.white
+        redraw()
+    )
     
-    
-    $('#goButton').on('click',goHandler)
+
+    $('#goButton').on('click', goHandler)
 )
