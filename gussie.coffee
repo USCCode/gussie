@@ -2,14 +2,17 @@
 #
 #  hi
 #   
-canvas = 0
-context = 0
+patchCanvas = 0
+patchContext = 0
+turtleCanvas = 0
+turtleContext = 0
+
 who = 0
 color = {
     black: "#555555",
-    white: "#EEEEEE"
+    white: "#EEEEEE",
+    red: "#FF0000"
     }
-
 
 class Turtle
     constructor: ->
@@ -17,25 +20,26 @@ class Turtle
         @ycor = 100
         @heading = 0
         @who = who++
-        @color = color.white
+        @color = color.red
         turtles.add(@)
 
     key: ->
         @who
 
     draw: ->
-        context.save()
-        context.fillStyle = @color
-        context.translate(Math.round(@xcor),Math.round(@ycor))
-        context.rotate(@heading)
-        context.beginPath()
-        context.moveTo(0,0)
-        context.lineTo(-5,-5)
-        context.lineTo(10,0)
-        context.lineTo(-5,5)
-        context.lineTo(0,0)
-        context.stroke()
-        context.restore()
+        console.log 'Drawing turtle'
+        turtleContext.save()
+        turtleContext.fillStyle = @color
+        turtleContext.translate(Math.round(@xcor),Math.round(@ycor))
+        turtleContext.rotate(@heading)
+        turtleContext.beginPath()
+        turtleContext.moveTo(0,0)
+        turtleContext.lineTo(-5,-5)
+        turtleContext.lineTo(10,0)
+        turtleContext.lineTo(-5,5)
+        turtleContext.lineTo(0,0)
+        turtleContext.fill()
+        turtleContext.restore()
         return this
         
     update: ->
@@ -80,10 +84,17 @@ class Turtleset
 
     with: (f) ->
         result = new Turtleset
-        for own key,turtle of @turtles
+        for key,turtle of @turtles
             if f.apply(turtle)
                 result.add(turtle)
         return result
+
+    withPV: (property, value) ->
+        result = new Turtleset
+        for key,turtle of @turtles
+            if turtle[property] == value
+                result.add(turtle)
+        return result        
 
     do: (f) ->
         for own key,turtle of @turtles
@@ -106,10 +117,10 @@ patches = window.patches
 patch = (x,y) ->
     patches.get(x + "-" + y)
 
-patches_width = 1
-patches_height = 1
-max_pxcor = 400
-max_pycor = 400
+patches_width = 10
+patches_height = 10
+max_pxcor = 40
+max_pycor = 40
 
 
 class Patch extends Turtle
@@ -127,8 +138,8 @@ class Patch extends Turtle
     draw: ->
         if not (@drawnColor == @pcolor)
             @drawnColor = @pcolor
-            context.fillStyle = @pcolor
-            context.fillRect(@pcxcor, @pcycor, patches_width, patches_height)
+            patchContext.fillStyle = @pcolor
+            patchContext.fillRect(@pcxcor, @pcycor, patches_width, patches_height)
             
     key: ->
         @pxcor + "-" + @pycor
@@ -143,8 +154,12 @@ h = patches_height * max_pycor
 
 # Create all the patches, set window.patches variable 
 create_patches = () ->
-    $('#canvas').attr('width',w) #setting it in CSS (.width()) does not work!
-    $('#canvas').attr('height',h)
+    $('#world').attr('width',w).width(w) 
+    $('#world').attr('height',h).height(h)
+    $('#patchCanvas').attr('width',w)
+    $('#patchCanvas').attr('height',h)
+    $('#turtleCanvas').attr('width',w) #setting it in CSS (.width()) does not work!
+    $('#turtleCanvas').attr('height',h)
     #create all the patches
     window.patches = new Turtleset
     patches = window.patches
@@ -180,7 +195,6 @@ create_patches = () ->
             patch(myPxcorM1,myPycorP1),
             patch(myPxcorP1,myPycorM1),
             patch(myPxcorP1,myPycorP1) ] )
-
 #for testing
 create_turtles = (num) ->
     for i in [0...num]
@@ -210,8 +224,11 @@ window.redraw = redraw
 
 go = ->
     console.log('calculating')
+    tm = Date.now()
     patches.do ->
         @calculate()
+    console.log('Took ')
+    console.log(Date.now() - tm)        
     console.log('setting new color')        
     patches.do ->
         @setColor @nextColor
@@ -229,9 +246,10 @@ goHandler = () ->
 
 #This is how we add a method to an existing class.
 Patch::calculate = ->
-    numLiveNeighbors = @neighbors.with(->
-        @pcolor == color.black
-        ).count()
+    numLiveNeighbors = @neighbors.withPV('pcolor', color.black).count()
+    # numLiveNeighbors = @neighbors.with(->
+    #     @pcolor == color.black
+    #     ).count()        
     @nextColor = @pcolor
     if @pcolor == color.black
         if (numLiveNeighbors < 2 or numLiveNeighbors > 3)
@@ -240,26 +258,23 @@ Patch::calculate = ->
         if numLiveNeighbors == 3
             @nextColor = color.black #live!
 
-window.blackCount = ->
-    patches.with( ->
-        @pcolor == color.black).count()
-
-position = 10        
 
 $(document).ready( () ->
     console.log('ready')
-    canvas = $('canvas')
-    context = canvas[0].getContext('2d')
+    patchCanvas = $('#patchCanvas')
+    patchContext = patchCanvas[0].getContext('2d')
+    turtleCanvas = $('#turtleCanvas')
+    turtleContext = turtleCanvas[0].getContext('2d')
     create_patches()
     redraw()
     
     $('#setupButton').on('click', ->
         patches.do ->
             newColor = color.white
-            newColor = if Math.random() < .5  then color.black else color.white 
+            newColor = if Math.random() < .1  then color.black else color.white 
             @setColor newColor
+        create_turtles(1)
         redraw()
-        position++
     )
 
     $('#goButton').on('click', goHandler)

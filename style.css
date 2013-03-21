@@ -1,0 +1,19 @@
+#world {
+  position: relative;
+}
+
+#world canvas {
+  background-color: transparent; 
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: solid 1px;
+}
+
+#patchCanvas {
+  z-index: 0;
+}
+
+#turtleCanvas {
+  z-index: 1;
+}
