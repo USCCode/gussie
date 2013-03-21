@@ -6,8 +6,8 @@ canvas = 0
 context = 0
 who = 0
 color = {
-    black: "#000000",
-    white: "#FFFFFF"
+    black: "#555555",
+    white: "#EEEEEE"
     }
 
 
@@ -120,15 +120,16 @@ class Patch extends Turtle
         @pycor = 0
         @pcxcor = 0 #the top-left point (used for drawing)
         @pcycor = 0
-        @pcxcor_end = 0 #the bottom-right point (used for drawing)
-        @pcycor_end = 0
-        @pcolor = color.white
-        @neighbors = []  #a turtleset with my neighbors
+        @pcolor = "#AA5555"
+        @drawnColor = null
+        @neighbors = null  #a turtleset with my neighbors
 
     draw: ->
-        context.fillStyle = @pcolor
-        context.fillRect(@pcxcor, @pcycor, @pcxcor_end, @pcycor_end)
-
+        if not (@drawnColor == @pcolor)
+            @drawnColor = @pcolor
+            context.fillStyle = @pcolor
+            context.fillRect(@pcxcor, @pcycor, patches_width, patches_height)
+            
     key: ->
         @pxcor + "-" + @pycor
         
@@ -154,9 +155,7 @@ create_patches = () ->
             p.pxcor = x
             p.pycor = y
             p.pcxcor = x * patches_width
-            p.pcxcor_end = p.pcxcor + patches_width
             p.pcycor = y * patches_height
-            p.pcycor_end = p.pcycor + patches_height
             p.xcor = p.pcxcor + (patches_width / 2)
             p.ycor = p.pcycor + (patches_height / 2)
             patches.add p
@@ -196,7 +195,7 @@ redraw = () ->
 #    m_canvas.width = w;
 #    m_canvas.height = h;
 #    context = m_canvas.getContext('2d');
-    context.clearRect(0,0,canvas.width(), canvas.height())    
+#    context.clearRect(0,0,canvas.width(), canvas.height())
     patches.draw()
     turtles.draw()
 #    displayContext.drawImage(m_canvas,0,0)
@@ -207,14 +206,16 @@ redraw = () ->
 #
 #
 
+window.redraw = redraw
+
 go = ->
     console.log('calculating')
     patches.do ->
         @calculate()
-    console.log('setting')
+    console.log('setting new color')        
     patches.do ->
-        @setColor(@nextColor)
-    console.log('drawing')
+        @setColor @nextColor
+    console.log('drawing')        
     tm = Date.now()
     redraw()
     console.log('Took ')
@@ -228,16 +229,22 @@ goHandler = () ->
 
 #This is how we add a method to an existing class.
 Patch::calculate = ->
-    @nextColor = @pcolor
     numLiveNeighbors = @neighbors.with(->
         @pcolor == color.black
         ).count()
+    @nextColor = @pcolor
     if @pcolor == color.black
         if (numLiveNeighbors < 2 or numLiveNeighbors > 3)
             @nextColor = color.white #die
     else #dead cell
-        if numLiveNeighbors == 3 
+        if numLiveNeighbors == 3
             @nextColor = color.black #live!
+
+window.blackCount = ->
+    patches.with( ->
+        @pcolor == color.black).count()
+
+position = 10        
 
 $(document).ready( () ->
     console.log('ready')
@@ -248,9 +255,11 @@ $(document).ready( () ->
     
     $('#setupButton').on('click', ->
         patches.do ->
+            newColor = color.white
             newColor = if Math.random() < .5  then color.black else color.white 
             @setColor newColor
         redraw()
+        position++
     )
 
     $('#goButton').on('click', goHandler)
