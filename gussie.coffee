@@ -20,6 +20,9 @@ class Turtle
         @color = color.white
         turtles.add(@)
 
+    key: ->
+        @who
+
     draw: ->
         context.save()
         context.fillStyle = @color
@@ -50,38 +53,58 @@ class Turtle
         @ycor += dy;
         return @
 
+
+#Turtleset stores the turtles in @turtles as an object
+# with turtle.key as the key
+#It is a set (no duplicates) based on the key.
+
 class Turtleset
-    constructor: (array) ->
-        @turtles = array ? []
+    constructor: (array) -> #TODO: check that array is an Array
+        @turtles = {}
+        @size = 0
+        if array
+            for turtle in array
+                @add turtle
 
     add: (turtle) ->
-        @turtles.push(turtle)
+        if not @turtles.hasOwnProperty turtle.key
+            @size++
+        @turtles[turtle.key()] = turtle
         return @
 
+    get: (key) ->
+        @turtles[key]
+
     count: ->
-        return @turtles.length
+        return @size
 
     with: (f) ->
-        nt = new Turtleset
-        result = []
-        for turtle in @turtles
+        result = new Turtleset
+        for own key,turtle of @turtles
             if f.apply(turtle)
-                result.push(turtle)
-        nt.turtles = result
-        return nt
+                result.add(turtle)
+        return result
 
     do: (f) ->
-        for turtle in @turtles
+        for own key,turtle of @turtles
             f.apply(turtle)
             
     draw: ->
-        turtle.draw() for turtle in @turtles
+        turtle.draw() for own key,turtle of @turtles
 
 window.turtles = new Turtleset
+turtles = window.turtles
+
+turtle = (w) ->
+    turtles.get(w)
+        
 
 #global var where we store a Turtleset of patches
 window.patches = 0
 patches = window.patches
+
+patch = (x,y) ->
+    patches.get(x + "-" + y)
 
 patches_width = 1
 patches_height = 1
@@ -106,21 +129,24 @@ class Patch extends Turtle
         context.fillStyle = @pcolor
         context.fillRect(@pcxcor, @pcycor, @pcxcor_end, @pcycor_end)
 
+    key: ->
+        @pxcor + "-" + @pycor
+        
     setColor: (@pcolor) ->
 
     neighbors: () ->
         return @neighbors
 
+w = patches_width * max_pxcor
+h = patches_height * max_pycor
 
 # Create all the patches, set window.patches variable 
 create_patches = () ->
-    w = patches_width * max_pxcor
-    h = patches_height * max_pycor
     $('#canvas').attr('width',w) #setting it in CSS (.width()) does not work!
     $('#canvas').attr('height',h)
     #create all the patches
     window.patches = new Turtleset
-    patchTable = {}
+    patches = window.patches
     console.log('making patches')
     for x in [0...max_pxcor]
         for y in [0...max_pycor]
@@ -133,8 +159,7 @@ create_patches = () ->
             p.pcycor_end = p.pcycor + patches_height
             p.xcor = p.pcxcor + (patches_width / 2)
             p.ycor = p.pcycor + (patches_height / 2)
-            patchTable[p.pxcor + " " + p.pycor] = p
-            window.patches.add p
+            patches.add p
     #set each patch's neighbors
     console.log('setting neighbors')
     patches = window.patches
@@ -147,25 +172,15 @@ create_patches = () ->
         myPycorM1 = myPycor - 1
         myPycorM1 = (max_pycor - 1) if myPycorM1 < 0
         myPycorP1 = (myPycor + 1) % max_pycor
-        @neighbors = new Turtleset([patchTable[myPxcorM1 + " " + myPycor],
-            patchTable[myPxcorP1 + " " + myPycor],
-            patchTable[myPxcor + " " + myPycorM1],
-            patchTable[myPxcor + " " +  myPycorP1],
-            patchTable[myPxcorM1 + " " + myPycorM1],
-            patchTable[myPxcorM1 + " " + myPycorP1],
-            patchTable[myPxcorP1 + " " + myPycorM1],
-            patchTable[myPxcorP1 + " " + myPycorP1] ] )
-        # @neighbors = patches.with( ->
-        #     (@pxcor == myPxcorM1 and @pycor == myPycor) or
-        #     (@pxcor == myPxcorP1 and @pycor == myPycor) or
-        #     (@pxcor == myPxcor and @pycor == myPycorM1) or
-        #     (@pxcor == myPxcor and @pycor == myPycorP1) or
-        #     (@pxcor == myPxcorM1 and @pycor == myPycorM1) or
-        #     (@pxcor == myPxcorM1 and @pycor == myPycorP1) or
-        #     (@pxcor == myPxcorP1 and @pycor == myPycorM1) or
-        #     (@pxcor == myPxcorP1 and @pycor == myPycorP1))
-
-            
+        @neighbors = new Turtleset([
+            patch(myPxcorM1,myPycor),
+            patch(myPxcorP1,myPycor),
+            patch(myPxcor,myPycorM1),
+            patch(myPxcor,myPycorP1),
+            patch(myPxcorM1,myPycorM1),
+            patch(myPxcorM1,myPycorP1),
+            patch(myPxcorP1,myPycorM1),
+            patch(myPxcorP1,myPycorP1) ] )
 
 #for testing
 create_turtles = (num) ->
@@ -176,20 +191,34 @@ animate = true
 
 #Redraw everything in the canvas.
 redraw = () ->
-    context.clearRect(0,0,canvas.width(), canvas.height())
+#    displayContext = context
+#    m_canvas = document.createElement('canvas')
+#    m_canvas.width = w;
+#    m_canvas.height = h;
+#    context = m_canvas.getContext('2d');
+    context.clearRect(0,0,canvas.width(), canvas.height())    
     patches.draw()
     turtles.draw()
+#    displayContext.drawImage(m_canvas,0,0)
+#    context = displayContext
+    
 
 # User stuff below...or so that is the plan................................................
 #
 #
 
 go = ->
+    console.log('calculating')
     patches.do ->
         @calculate()
+    console.log('setting')
     patches.do ->
-        @pcolor = @nextColor
+        @setColor(@nextColor)
+    console.log('drawing')
+    tm = Date.now()
     redraw()
+    console.log('Took ')
+    console.log(Date.now() - tm)
     if $('#goButton').prop('checked')
         setTimeout go,0
 
@@ -199,7 +228,7 @@ goHandler = () ->
 
 #This is how we add a method to an existing class.
 Patch::calculate = ->
-    window.n = @neighbors
+    @nextColor = @pcolor
     numLiveNeighbors = @neighbors.with(->
         @pcolor == color.black
         ).count()
@@ -215,11 +244,12 @@ $(document).ready( () ->
     canvas = $('canvas')
     context = canvas[0].getContext('2d')
     create_patches()
-        # t = create_turtles(10)
-
+    redraw()
+    
     $('#setupButton').on('click', ->
         patches.do ->
-            @pcolor = if Math.random() < .5  then color.black else color.white
+            newColor = if Math.random() < .5  then color.black else color.white 
+            @setColor newColor
         redraw()
     )
 
