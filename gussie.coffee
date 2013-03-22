@@ -33,9 +33,9 @@ class Turtle
         turtleContext.rotate(@heading)
         turtleContext.beginPath()
         turtleContext.moveTo(0,0)
-        turtleContext.lineTo(-5,-5)
-        turtleContext.lineTo(10,0)
-        turtleContext.lineTo(-5,5)
+        turtleContext.lineTo(-patches_radius,-patches_radius)
+        turtleContext.lineTo(patches_radius,0)
+        turtleContext.lineTo(-patches_radius,patches_radius)
         turtleContext.lineTo(0,0)
         turtleContext.fill()
         turtleContext.restore()
@@ -45,7 +45,7 @@ class Turtle
         return @
 
     forward: (distance) ->
-        distance = distance * patches_width
+        distance = distance * patches_size
         dx = Math.cos(this.heading) * distance
         dy = Math.sin(this.heading) * distance
         @xcor += dx
@@ -113,8 +113,8 @@ patches = window.patches
 patch = (x,y) ->
     patches.get(x + "-" + y)
 
-patches_width = 10
-patches_height = 10
+patches_size = 10 #patches must be square
+patches_radius = patches_size / 2
 max_pxcor = 40
 max_pycor = 40
 
@@ -135,7 +135,7 @@ class Patch extends Turtle
         if not (@drawnColor == @pcolor)
             @drawnColor = @pcolor
             patchContext.fillStyle = @pcolor
-            patchContext.fillRect(@pcxcor, @pcycor, patches_width, patches_height)
+            patchContext.fillRect(@pcxcor, @pcycor, patches_size, patches_size)
             
     key: ->
         @pxcor + "-" + @pycor
@@ -145,8 +145,8 @@ class Patch extends Turtle
     neighbors: () ->
         return @neighbors
 
-w = patches_width * max_pxcor
-h = patches_height * max_pycor
+w = patches_size * max_pxcor
+h = patches_size * max_pycor
 
 wrap = (x,y) ->
     x = x % w
@@ -172,10 +172,10 @@ create_patches = () ->
             p = new Patch(x,y)
             p.pxcor = x
             p.pycor = y
-            p.pcxcor = x * patches_width
-            p.pcycor = y * patches_height
-            p.xcor = p.pcxcor + (patches_width / 2)
-            p.ycor = p.pcycor + (patches_height / 2)
+            p.pcxcor = x * patches_size
+            p.pcycor = y * patches_size
+            p.xcor = p.pcxcor + (patches_size / 2)
+            p.ycor = p.pcycor + (patches_size / 2)
             patches.add p
     #set each patch's neighbors
     console.log('setting neighbors')
@@ -279,7 +279,7 @@ $(document).ready( () ->
     $('#setupButton').on('click', ->
         patches.do ->
             newColor = color.white
-            newColor = if Math.random() < .1  then color.black else color.white 
+            newColor = if Math.random() < .5  then color.black else color.white 
             @setColor newColor
         create_turtles(1)
         redraw()
