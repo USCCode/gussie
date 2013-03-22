@@ -27,7 +27,6 @@ class Turtle
         @who
 
     draw: ->
-        console.log 'Drawing turtle'
         turtleContext.save()
         turtleContext.fillStyle = @color
         turtleContext.translate(Math.round(@xcor),Math.round(@ycor))
@@ -42,19 +41,16 @@ class Turtle
         turtleContext.restore()
         return this
         
-    update: ->
-        @heading += Math.random() * 1 - .5
-        @forward(1)
-        return @
-
     setHeading: (@heading) -> 
         return @
 
     forward: (distance) ->
-        dx = Math.cos(this.heading) * distance;
-        dy = Math.sin(this.heading) * distance;
-        @xcor += dx;
-        @ycor += dy;
+        distance = distance * patches_width
+        dx = Math.cos(this.heading) * distance
+        dy = Math.sin(this.heading) * distance
+        @xcor += dx
+        @ycor += dy
+        [@xcor, @ycor] = wrap(@xcor,@ycor)
         return @
 
 
@@ -152,6 +148,13 @@ class Patch extends Turtle
 w = patches_width * max_pxcor
 h = patches_height * max_pycor
 
+wrap = (x,y) ->
+    x = x % w
+    x =  w + x if x < 0
+    y = y % h
+    y =  h + y if y < 0
+    return [x,y]
+
 # Create all the patches, set window.patches variable 
 create_patches = () ->
     $('#world').attr('width',w).width(w) 
@@ -209,8 +212,9 @@ redraw = () ->
 #    m_canvas.width = w;
 #    m_canvas.height = h;
 #    context = m_canvas.getContext('2d');
-#    context.clearRect(0,0,canvas.width(), canvas.height())
+
     patches.draw()
+    turtleContext.clearRect(0,0,turtleCanvas.width(), turtleCanvas.height())
     turtles.draw()
 #    displayContext.drawImage(m_canvas,0,0)
 #    context = displayContext
@@ -222,11 +226,15 @@ redraw = () ->
 
 window.redraw = redraw
 
+
 go = ->
     console.log('calculating')
     tm = Date.now()
     patches.do ->
         @calculate()
+    turtles.do ->
+        @heading += Math.random() * 1 - .5
+        @forward 1
     console.log('Took ')
     console.log(Date.now() - tm)        
     console.log('setting new color')        
