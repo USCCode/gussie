@@ -100,14 +100,27 @@ class Turtle
 
         angle = Math.atan (dy / dx)
         angle = angle + Math.PI if dx < 0
-        return angle        
+        return angle
 
     towards: (other) ->
         return @towardsxy(other.xcor, other.ycor)
 
+    distancexy: (otherx,othery) ->
+        dx = Math.abs (otherx - @xcor)
+        dy = Math.abs (othery - @ycor)
+        return Math.sqrt(Math.pow(Math.min(dx, canvas_width - dx), 2)
+            + Math.pow(Math.min(dy, canvas_height - dy),2) )
+
+    distance: (other) ->
+        @distancexy other.xcor,other.ycor
+
     face: (other) ->
         @heading = @towards other
         return @
+
+    #A turtle dies by removing itself from the 'turtles' global variable.
+    die: ->
+        turtles.delete @who
 
 #Turtleset stores the turtles in @turtles as an object
 # with turtle.key as the key
@@ -126,6 +139,10 @@ class Turtleset
             @size++
         @turtles[turtle.key()] = turtle
         return @
+
+    #Return a new turtleset with all the same turtles except 'turtle'
+    minus: (turtle) ->
+        return new Turtleset (t for key,t of @turtles when t.who != turtle.who)
 
     get: (key) ->
         @turtles[key]
@@ -191,6 +208,10 @@ class Turtleset
     do: (f) ->
         for own key,turtle of @turtles
             f.apply(turtle)
+
+    delete: (who) ->
+        @size--
+        delete @turtles[who]
 
     draw: ->
         turtle.draw() for own key,turtle of @turtles
@@ -293,14 +314,15 @@ create_turtles = (num) ->
 animate = true
 
 #Redraw everything in the canvas.
-redraw = () ->
+redraw =  ->
     patches.draw()
     turtleContext.clearRect(0,0,turtleCanvas.width(), turtleCanvas.height())
     turtles.draw()
 
+window.redraw = redraw
 
 #Create the patches, setup the world
-$( ->
+$ ->
     console.log('ready')
     patchCanvas = $('#patchCanvas')
     patchContext = patchCanvas[0].getContext('2d')
@@ -308,13 +330,13 @@ $( ->
     turtleContext = turtleCanvas[0].getContext('2d')
     create_patches()
     redraw()
-  )          
+  
+
+
 
 # User stuff below...or so that is the plan.......................................................
 #
 #
-
-window.redraw = redraw
 
 
 go = ->
@@ -322,8 +344,13 @@ go = ->
     tm = Date.now()
 #    patches.do ->
 #        @calculate()
-    turtles.do ->
-        @heading += Math.random() * 1 - .5
+    turtles.with( -> @who > 0).do ->
+        @heading = @heading + Math.random() - .5
+        @forward 1
+    turtles.withPV('who', 0).do ->
+        myself = @
+        closest = turtles.minus(@).min_one_of(-> @distance myself)
+        @heading = @towards closest
         @forward 1
     console.log('Took ')
     console.log(Date.now() - tm)        
@@ -363,7 +390,9 @@ $ ->
         create_turtles(3)
         window.t0 = turtle 0
         window.t1 = turtle 1
+        window.t1.xcor = 200
         window.t2 = turtle 2
+        window.t2.xcor = 300
         redraw()
 
     $('#goButton').on('click', go)
