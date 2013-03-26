@@ -1,11 +1,28 @@
 #gussie.coffee by jmvidal@gmail.com
 #
-#  hi
+#Coordinates:
+# Turtle.xcor and ycor are real-valued and map directly into the underlying canvas.
+# Turtle.who is an int, starting at 0
+# Patch.pxcor and pycor are ints and count the patches, starting at 0,0 in the top-left
+#  and incrementing by 1. The 
 #   
 patchCanvas = 0
 patchContext = 0
 turtleCanvas = 0
 turtleContext = 0
+
+#The size of the patches, in canvas pixels. Patches must be square
+patches_size = 10 
+patches_radius = patches_size / 2
+
+#How many patches there will be in each direction.
+max_pxcor = 40
+max_pycor = 40
+
+#The canvas width and height
+canvas_width = patches_size * max_pxcor
+canvas_height = patches_size * max_pycor
+
 
 who = 0
 color = {
@@ -14,6 +31,14 @@ color = {
     red: "#FF0000"
     }
 
+#Add methods to the built-in array
+Array::min = ->
+    Math.min.apply null,this
+
+Array::max = ->
+    Math.max.apply null,this
+
+#The Turtle
 class Turtle
     constructor: ->
         @xcor = 100
@@ -60,17 +85,17 @@ class Turtle
         dy = othery - @ycor
 
         #Wraparound fix
-        if 2 * Math.abs(dx) > w #it is closer to go around
+        if 2 * Math.abs(dx) > canvas_width #it is closer to go around
             if dx > 0 #he is to my right
-                otherx = @xcor - w + dx
+                otherx = @xcor - canvas_width + dx
             if dx < 0 #he is to my left
-                otherx = @xcor + w + dx
+                otherx = @xcor + canvas_width + dx
             dx = otherx - @xcor
-        if 2 * Math.abs(dy) > h #it is closer to go around
+        if 2 * Math.abs(dy) > canvas_height #it is closer to go around
             if dy > 0 
-                othery = @ycor - h + dy
+                othery = @ycor - canvas_height + dy
             if dy < 0 
-                othery = @ycor + h + dy
+                othery = @ycor + canvas_height + dy
             dy = othery - @ycor
 
         angle = Math.atan (dy / dx)
@@ -105,9 +130,47 @@ class Turtleset
     get: (key) ->
         @turtles[key]
 
+    #Returns an array with the values of the given property for all, like 'of'
+    values: (property) ->
+        if property instanceof Function
+            return (property.apply(turtle) for own key,turtle of @turtles)
+        return (turtle[property] for own key,turtle of @turtles)
+
     count: ->
         return @size
 
+    one_of : ->
+        keys = (key for own key,turtle of @turtles)
+        chosenKey = keys[Math.floor(Math.random() * keys.length)]
+        return @turtles[chosenKey]
+
+    #Returns a turtleset containing all the turtles that have a minimal value for prop
+    min_of : (prop) ->
+        vals = @values prop
+        minVal = vals.min()
+        return @withPV(prop,minVal)
+
+    #Same as min_of
+    with_min: (prop) ->
+        return @min_of prop
+
+    min_n_of: (prop, n) ->
+
+    #Returns one of the turtles with a min value for prop.
+    min_one_of: (prop) ->
+        return @min_of(prop).one_of()
+
+    max_of: (prop) ->
+        vals = @values prop
+        maxVal = vals.max()
+        return @withPV(prop,maxVal)
+
+    with_max: (prop) ->
+        return @max_of prop
+                
+    max_one_of: (prop) ->
+        return @max_of(prop).one_of()
+        
     with: (f) ->
         result = new Turtleset
         for key,turtle of @turtles
@@ -118,14 +181,17 @@ class Turtleset
     withPV: (property, value) ->
         result = new Turtleset
         for key,turtle of @turtles
-            if turtle[property] == value
+            if property instanceof Function
+                if property.apply(turtle) == value
+                    result.add(turtle)
+            else if turtle[property] == value
                 result.add(turtle)
         return result        
 
     do: (f) ->
         for own key,turtle of @turtles
             f.apply(turtle)
-            
+
     draw: ->
         turtle.draw() for own key,turtle of @turtles
 
@@ -143,19 +209,13 @@ patches = window.patches
 patch = (x,y) ->
     patches.get(x + "-" + y)
 
-patches_size = 10 #patches must be square
-patches_radius = patches_size / 2
-max_pxcor = 40
-max_pycor = 40
-
-
 class Patch extends Turtle
     constructor: (@pxcor, @pycor)->
         @xcor = 0 # the center point of the patch
         @ycor = 0
         @pxcor = 0 # the patch's position (in patch coordinates)
         @pycor = 0
-        @pcxcor = 0 #the top-left point (used for drawing)
+        @pcxcor = 0 #the top-left point of the patch, in pixels, used for drawing
         @pcycor = 0
         @pcolor = "#AA5555"
         @drawnColor = null
@@ -175,25 +235,21 @@ class Patch extends Turtle
     neighbors: () ->
         return @neighbors
 
-#The canvas width and height
-w = patches_size * max_pxcor
-h = patches_size * max_pycor
-
 wrap = (x,y) ->
-    x = x % w
-    x =  w + x if x < 0
-    y = y % h
-    y =  h + y if y < 0
+    x = x % canvas_width
+    x =  canvas_width + x if x < 0
+    y = y % canvas_height
+    y =  canvas_height + y if y < 0
     return [x,y]
 
 # Create all the patches, set window.patches variable 
 create_patches = () ->
-    $('#world').attr('width',w).width(w) 
-    $('#world').attr('height',h).height(h)
-    $('#patchCanvas').attr('width',w)
-    $('#patchCanvas').attr('height',h)
-    $('#turtleCanvas').attr('width',w) #setting it in CSS (.width()) does not work!
-    $('#turtleCanvas').attr('height',h)
+    $('#world').attr('width',canvas_width).width(canvas_width) 
+    $('#world').attr('height',canvas_height).height(canvas_height)
+    $('#patchCanvas').attr('width',canvas_width)
+    $('#patchCanvas').attr('height',canvas_height)
+    $('#turtleCanvas').attr('width',canvas_width) #setting it in CSS (.width()) does not work!
+    $('#turtleCanvas').attr('height',canvas_height)
     #create all the patches
     window.patches = new Turtleset
     patches = window.patches
@@ -254,7 +310,7 @@ $( ->
     redraw()
   )          
 
-# User stuff below...or so that is the plan...........................................................................................
+# User stuff below...or so that is the plan.......................................................
 #
 #
 
@@ -264,8 +320,8 @@ window.redraw = redraw
 go = ->
     console.log('calculating')
     tm = Date.now()
-    patches.do ->
-        @calculate()
+#    patches.do ->
+#        @calculate()
     turtles.do ->
         @heading += Math.random() * 1 - .5
         @forward 1
@@ -285,6 +341,7 @@ go = ->
 #This is how we add a method to an existing class.
 Patch::calculate = ->
     numLiveNeighbors = @neighbors.withPV('pcolor', color.black).count()
+    #Another way to do it, a bit slower
     # numLiveNeighbors = @neighbors.with(->
     #     @pcolor == color.black
     #     ).count()        
@@ -301,11 +358,12 @@ $ ->
     $('#setupButton').on 'click', ->
         patches.do ->
             newColor = color.white
-            newColor = if Math.random() < .5  then color.black else color.white 
+#            newColor = if Math.random() < .5  then color.black else color.white 
             @setColor newColor
-        create_turtles(2)
-        window.t1 = turtle 0
-        window.t2 = turtle 1
+        create_turtles(3)
+        window.t0 = turtle 0
+        window.t1 = turtle 1
+        window.t2 = turtle 2
         redraw()
 
     $('#goButton').on('click', go)
