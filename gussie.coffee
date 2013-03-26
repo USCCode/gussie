@@ -39,7 +39,7 @@ class Turtle
         turtleContext.lineTo(0,0)
         turtleContext.fill()
         turtleContext.restore()
-        return this
+        return @
         
     setHeading: (@heading) -> 
         return @
@@ -53,6 +53,36 @@ class Turtle
         [@xcor, @ycor] = wrap(@xcor,@ycor)
         return @
 
+    # Return the angle that would make this turtle point to otherx,othery
+    # We look for the min
+    towardsxy: (otherx,othery) ->
+        dx = otherx - @xcor
+        dy = othery - @ycor
+
+        #Wraparound fix
+        if 2 * Math.abs(dx) > w #it is closer to go around
+            if dx > 0 #he is to my right
+                otherx = @xcor - w + dx
+            if dx < 0 #he is to my left
+                otherx = @xcor + w + dx
+            dx = otherx - @xcor
+        if 2 * Math.abs(dy) > h #it is closer to go around
+            if dy > 0 
+                othery = @ycor - h + dy
+            if dy < 0 
+                othery = @ycor + h + dy
+            dy = othery - @ycor
+
+        angle = Math.atan (dy / dx)
+        angle = angle + Math.PI if dx < 0
+        return angle        
+
+    towards: (other) ->
+        return @towardsxy(other.xcor, other.ycor)
+
+    face: (other) ->
+        @heading = @towards other
+        return @
 
 #Turtleset stores the turtles in @turtles as an object
 # with turtle.key as the key
@@ -145,6 +175,7 @@ class Patch extends Turtle
     neighbors: () ->
         return @neighbors
 
+#The canvas width and height
 w = patches_size * max_pxcor
 h = patches_size * max_pycor
 
@@ -207,20 +238,23 @@ animate = true
 
 #Redraw everything in the canvas.
 redraw = () ->
-#    displayContext = context
-#    m_canvas = document.createElement('canvas')
-#    m_canvas.width = w;
-#    m_canvas.height = h;
-#    context = m_canvas.getContext('2d');
-
     patches.draw()
     turtleContext.clearRect(0,0,turtleCanvas.width(), turtleCanvas.height())
     turtles.draw()
-#    displayContext.drawImage(m_canvas,0,0)
-#    context = displayContext
-    
 
-# User stuff below...or so that is the plan................................................
+
+#Create the patches, setup the world
+$( ->
+    console.log('ready')
+    patchCanvas = $('#patchCanvas')
+    patchContext = patchCanvas[0].getContext('2d')
+    turtleCanvas = $('#turtleCanvas')
+    turtleContext = turtleCanvas[0].getContext('2d')
+    create_patches()
+    redraw()
+  )          
+
+# User stuff below...or so that is the plan...........................................................................................
 #
 #
 
@@ -248,10 +282,6 @@ go = ->
     if $('#goButton').prop('checked')
         setTimeout go,0
 
-goHandler = () ->
-    if $('#goButton').prop('checked')
-        go()
-
 #This is how we add a method to an existing class.
 Patch::calculate = ->
     numLiveNeighbors = @neighbors.withPV('pcolor', color.black).count()
@@ -267,24 +297,17 @@ Patch::calculate = ->
             @nextColor = color.black #live!
 
 
-$(document).ready( () ->
-    console.log('ready')
-    patchCanvas = $('#patchCanvas')
-    patchContext = patchCanvas[0].getContext('2d')
-    turtleCanvas = $('#turtleCanvas')
-    turtleContext = turtleCanvas[0].getContext('2d')
-    create_patches()
-    redraw()
-    
-    $('#setupButton').on('click', ->
+$ ->
+    $('#setupButton').on 'click', ->
         patches.do ->
             newColor = color.white
             newColor = if Math.random() < .5  then color.black else color.white 
             @setColor newColor
-        create_turtles(1)
+        create_turtles(2)
+        window.t1 = turtle 0
+        window.t2 = turtle 1
         redraw()
-    )
 
-    $('#goButton').on('click', goHandler)
+    $('#goButton').on('click', go)
     console.log('all systems go')
-)
+
