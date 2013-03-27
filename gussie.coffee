@@ -23,7 +23,7 @@ max_pycor = 40
 canvas_width = patches_size * max_pxcor
 canvas_height = patches_size * max_pycor
 
-
+#Global counter for the next who number
 who = 0
 color = {
     black: "#555555",
@@ -306,11 +306,21 @@ create_patches = () ->
             patch(myPxcorM1,myPycorP1),
             patch(myPxcorP1,myPycorM1),
             patch(myPxcorP1,myPycorP1) ] )
-#for testing
+
 create_turtles = (num) ->
     for i in [0...num]
         new Turtle
 
+clear_all = ->
+    turtles.do( -> @die())
+    patches = {}
+    who = 0
+    create_patches()
+    redraw()
+
+window.clear_all = clear_all
+    
+    
 animate = true
 
 #Redraw everything in the canvas.
@@ -340,9 +350,9 @@ $ ->
 
 
 go = ->
-    console.log('calculating')
-    tm = Date.now()
-#    patches.do ->
+#    console.log('calculating')
+#    tm = Date.now()
+#    patches.do -> 
 #        @calculate()
     turtles.with( -> @who > 0).do ->
         @heading = @heading + Math.random() - .5
@@ -352,19 +362,32 @@ go = ->
         closest = turtles.minus(@).min_one_of(-> @distance myself)
         @heading = @towards closest
         @forward 1
-    console.log('Took ')
-    console.log(Date.now() - tm)        
-    console.log('setting new color')        
-    patches.do ->
-        @setColor @nextColor
-    console.log('drawing')        
-    tm = Date.now()
+#    console.log('Took ')
+#    console.log(Date.now() - tm)        
+#    console.log('setting new color')        
+#    patches.do ->
+#        @setColor @nextColor
+#    console.log('drawing')        
+#    tm = Date.now()
     redraw()
-    console.log('Took ')
-    console.log(Date.now() - tm)
+#    console.log('Took ')
+#    console.log(Date.now() - tm)
     if $('#goButton').prop('checked')
         setTimeout go,0
 
+setup = ->
+    patches.do ->
+        newColor = color.white
+#            newColor = if Math.random() < .5  then color.black else color.white 
+        @setColor newColor
+    create_turtles(3)
+    window.t0 = turtle 0
+    window.t1 = turtle 1
+    window.t1.xcor = 200
+    window.t2 = turtle 2
+    window.t2.xcor = 300
+    redraw()
+    
 #This is how we add a method to an existing class.
 Patch::calculate = ->
     numLiveNeighbors = @neighbors.withPV('pcolor', color.black).count()
@@ -382,19 +405,7 @@ Patch::calculate = ->
 
 
 $ ->
-    $('#setupButton').on 'click', ->
-        patches.do ->
-            newColor = color.white
-#            newColor = if Math.random() < .5  then color.black else color.white 
-            @setColor newColor
-        create_turtles(3)
-        window.t0 = turtle 0
-        window.t1 = turtle 1
-        window.t1.xcor = 200
-        window.t2 = turtle 2
-        window.t2.xcor = 300
-        redraw()
-
-    $('#goButton').on('click', go)
+    $('#setupButton').on('click', setup)
+    $('#goButton').on 'click', go
     console.log('all systems go')
 
