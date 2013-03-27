@@ -1,4 +1,5 @@
 #gussie.coffee by jmvidal@gmail.com
+# no bugs here, just lots of newts
 #
 #Coordinates:
 # Turtle.xcor and ycor are real-valued and map directly into the underlying canvas.
@@ -25,11 +26,15 @@ canvas_height = patches_size * max_pycor
 
 #Global counter for the next who number
 who = 0
-color = {
-    black: "#555555",
-    white: "#EEEEEE",
+color = 
+    black: "#555555"
+    white: "#FEFEFE"
     red: "#FF0000"
-    }
+    green: "#00FF00"
+    blue: "#0000FF"
+    yellow: "#FFFF00"
+    magenta: "#FF00FF"
+    cyan: "#00FFFF"
 
 #Add methods to the built-in array
 Array::min = ->
@@ -37,6 +42,14 @@ Array::min = ->
 
 Array::max = ->
     Math.max.apply null,this
+
+
+if (typeof Object.create != 'function')
+    Object.create =  (o) ->
+        F = -> 
+        F.prototype = o
+        return new F()
+
 
 #The Turtle
 class Turtle
@@ -125,7 +138,9 @@ class Turtle
 #Turtleset stores the turtles in @turtles as an object
 # with turtle.key as the key
 #It is a set (no duplicates) based on the key.
-
+#NOTE: It can be that @turtles[x] == undefined, for some x,
+# this is how we remove a turtle from the set so that it is not inherited from its parent.
+# 
 class Turtleset
     constructor: (array) -> #TODO: check that array is an Array
         @turtles = {}
@@ -135,14 +150,20 @@ class Turtleset
                 @add turtle
 
     add: (turtle) ->
-        if not @turtles.hasOwnProperty turtle.key
+        if not @turtles.hasOwnProperty turtle.key or not @turtles[turtle.key()]
             @size++
         @turtles[turtle.key()] = turtle
         return @
 
     #Return a new turtleset with all the same turtles except 'turtle'
+    #The returned turtleset inherits from this one, but with turtle delete (set to undefined)
     minus: (turtle) ->
-        return new Turtleset (t for key,t of @turtles when t.who != turtle.who)
+        nt = Object.create @
+        nt.turtles = Object.create @turtles
+        nt.turtles[turtle.key()] = undefined
+        nt.size--
+        return nt
+#        return new Turtleset (t for key,t of @turtles when t.who != turtle.who)
 
     get: (key) ->
         @turtles[key]
@@ -150,14 +171,14 @@ class Turtleset
     #Returns an array with the values of the given property for all, like 'of'
     values: (property) ->
         if property instanceof Function
-            return (property.apply(turtle) for own key,turtle of @turtles)
-        return (turtle[property] for own key,turtle of @turtles)
+            return (property.apply(turtle) for key,turtle of @turtles when turtle)
+        return (turtle[property] for key,turtle of @turtles when turtle)
 
     count: ->
         return @size
 
     one_of : ->
-        keys = (key for own key,turtle of @turtles)
+        keys = (key for key,turtle of @turtles when turtle)
         chosenKey = keys[Math.floor(Math.random() * keys.length)]
         return @turtles[chosenKey]
 
@@ -189,32 +210,37 @@ class Turtleset
         return @max_of(prop).one_of()
         
     with: (f) ->
-        result = new Turtleset
-        for key,turtle of @turtles
-            if f.apply(turtle)
-                result.add(turtle)
+        result = Object.create @
+        result.turtles = Object.create @turtles
+        for key,turtle of result.turtles when turtle
+            if not f.apply(turtle)
+                result.turtles[key] = undefined
+                result.size--
         return result
 
     withPV: (property, value) ->
-        result = new Turtleset
-        for key,turtle of @turtles
+        result = Object.create @
+        result.turtles = Object.create @turtles
+        for key,turtle of result.turtles when turtle
             if property instanceof Function
-                if property.apply(turtle) == value
-                    result.add(turtle)
-            else if turtle[property] == value
-                result.add(turtle)
+                if property.apply(turtle) != value
+                    result.turtles[key] = undefined
+                    result.size--
+            else if turtle[property] != value
+                result.turtles[key] = undefined
+                result.size--
         return result        
 
     do: (f) ->
-        for own key,turtle of @turtles
+        for key,turtle of @turtles when turtle
             f.apply(turtle)
 
     delete: (who) ->
         @size--
-        delete @turtles[who]
+        @turtles[who] = undefined
 
     draw: ->
-        turtle.draw() for own key,turtle of @turtles
+        turtle.draw() for key,turtle of @turtles when turtle
 
 window.turtles = new Turtleset
 turtles = window.turtles
@@ -241,6 +267,7 @@ class Patch extends Turtle
         @pcolor = "#AA5555"
         @drawnColor = null
         @neighbors = null  #a turtleset with my neighbors
+        @who = @key()
 
     draw: ->
         if not (@drawnColor == @pcolor)
@@ -342,9 +369,12 @@ $ ->
     redraw()
   
 
+#TODO: Sample programs
+# n-queens problem
+# grah coloring: link and layout primitives
+# combinatorial auction
 
-
-# User stuff below...or so that is the plan.......................................................
+# User stuff below...or so that is the plan...............................................
 #
 #
 
@@ -376,6 +406,7 @@ go = ->
         setTimeout go,0
 
 setup = ->
+    clear_all()
     patches.do ->
         newColor = color.white
 #            newColor = if Math.random() < .5  then color.black else color.white 
