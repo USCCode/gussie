@@ -1,59 +1,34 @@
 go = ->
-#    console.log('calculating')
-#    tm = Date.now()
-#    patches.do -> 
-#        @calculate()
-    turtles.with( -> @who > 0).do ->
-        @heading = @heading + Math.random() - .5
-        @forward 1
-    turtles.withPV('who', 0).do ->
-        myself = @
-        closest = turtles.minus(@).min_one_of(-> @distance myself)
-        @heading = @towards closest
-        @forward 1
-#    console.log('Took ')
-#    console.log(Date.now() - tm)        
-#    console.log('setting new color')        
-#    patches.do ->
-#        @setColor @nextColor
-#    console.log('drawing')        
-#    tm = Date.now()
+    turtles.do ->
+        x = @pxcor()
+        y = @pycor()
+        conflicts = @other(turtles).with ->
+            @pxcor() == x or @pycor() == y or
+            Math.abs (@pxcor() - x) == Math.abs (@pycor() - y)
+        if conflicts.count() > 0
+            @pxcor((@pxcor() + 1) % 16)
     redraw()
-#    console.log('Took ')
-#    console.log(Date.now() - tm)
-    if $('#goButton').prop('checked')
-        setTimeout go,0
+#    if $('#goButton').prop('checked')
+#        setTimeout go,0
+
+window.go = go
 
 setup = ->
     clear_all()
     patches.do ->
-        newColor = color.white
-#            newColor = if Math.random() < .5  then color.black else color.white 
-        @setColor newColor
-    window.t0 = new Turtle
-    window.t1 = new Turtle
-    window.t1.xcor = 200
-    window.t2 = new Turtle
-    window.t2.xcor = 300
+        if (@pxcor + @pycor) % 2 == 0 
+            @setColor color.white
+        else
+            @setColor color.black
+    window.t = []
+    for i in [0...16]
+        window.t[i] = new Turtle
+        window.t[i].setpxy i,i
+        window.t[i].heading = - Math.PI / 2
     redraw()
     
-#This is how we add a method to an existing class.
-Patch::calculate = ->
-    numLiveNeighbors = @neighbors.withPV('pcolor', color.black).count()
-    #Another way to do it, a bit slower
-    # numLiveNeighbors = @neighbors.with(->
-    #     @pcolor == color.black
-    #     ).count()        
-    @nextColor = @pcolor
-    if @pcolor == color.black
-        if (numLiveNeighbors < 2 or numLiveNeighbors > 3)
-            @nextColor = color.white #die
-    else #dead cell
-        if numLiveNeighbors == 3
-            @nextColor = color.black #live!
-
-
 $ ->
+    initialize(16,16,20)
     $('#setupButton').on('click', setup)
     $('#goButton').on 'click', go
     console.log('all systems go')

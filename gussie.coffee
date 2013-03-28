@@ -13,6 +13,7 @@ turtleCanvas = 0
 turtleContext = 0
 
 #The size of the patches, in canvas pixels. Patches must be square
+# 
 patches_size = 10 
 patches_radius = patches_size / 2
 
@@ -65,6 +66,22 @@ class Turtle
 
     key: ->
         @who
+
+    pxcor: (px) ->
+        if px?
+            @xcor = px * patches_size + patches_radius
+        return Math.floor (@xcor / patches_size)
+
+    pycor: (py) ->
+        if py?
+            @ycor = py * patches_size + patches_radius
+        return Math.floor (@ycor / patches_size)
+
+    setxy: (@xcor,@ycor) ->
+
+    setpxy: (x,y) ->
+        @pxcor(x)
+        @pycor(y)
 
     draw: ->
         turtleContext.save()
@@ -137,6 +154,10 @@ class Turtle
     die: ->
         turtles.delete @who
 
+    #remove this turtle from tset turtleset and return that
+    other: (tset) ->
+        return tset.minus(@)
+
 window.Turtle = Turtle
 
 #Turtleset stores the turtles in @turtles as an object
@@ -175,14 +196,14 @@ class Turtleset
     #Returns an array with the values of the given property for all, like 'of'
     values: (property) ->
         if property instanceof Function
-            return (property.apply(turtle) for key,turtle of @turtles when turtle)
-        return (turtle[property] for key,turtle of @turtles when turtle)
+            return (property.apply(turtle) for key,turtle of @turtles when turtle?)
+        return (turtle[property] for key,turtle of @turtles when turtle?)
 
     count: ->
         return @size
 
     one_of : ->
-        keys = (key for key,turtle of @turtles when turtle) #TODO: @keys optimization
+        keys = (key for key,turtle of @turtles when turtle?) #TODO: @keys optimization
         chosenKey = keys[Math.floor(Math.random() * keys.length)]
         return @turtles[chosenKey]
 
@@ -216,7 +237,7 @@ class Turtleset
     with: (f) ->
         result = Object.create @
         result.turtles = Object.create @turtles
-        for key,turtle of result.turtles when turtle
+        for key,turtle of result.turtles when turtle?
             if not f.apply(turtle)
                 result.turtles[key] = undefined
                 result.size--
@@ -225,7 +246,7 @@ class Turtleset
     withPV: (property, value) ->
         result = Object.create @
         result.turtles = Object.create @turtles
-        for key,turtle of result.turtles when turtle
+        for key,turtle of result.turtles when turtle?
             if property instanceof Function
                 if property.apply(turtle) != value
                     result.turtles[key] = undefined
@@ -236,7 +257,7 @@ class Turtleset
         return result        
 
     do: (f) ->
-        for key,turtle of @turtles when turtle
+        for key,turtle of @turtles when turtle?
             f.apply(turtle)
 
     delete: (who) ->
@@ -244,7 +265,7 @@ class Turtleset
         @turtles[who] = undefined
 
     draw: ->
-        turtle.draw() for key,turtle of @turtles when turtle
+        turtle.draw() for key,turtle of @turtles when turtle?
 
 window.Turtleset = Turtleset
 
@@ -366,16 +387,27 @@ redraw =  ->
 
 window.redraw = redraw
 
-#Create the patches, setup the world
+#Setup the canvas global variables
 $ ->
     console.log('ready')
     patchCanvas = $('#patchCanvas')
     patchContext = patchCanvas[0].getContext('2d')
     turtleCanvas = $('#turtleCanvas')
     turtleContext = turtleCanvas[0].getContext('2d')
+
+#Create the patches, according to the user's need
+# x,y are the number of patches in each dimension.
+# size: is the size of the patches in pixels. Patches are square.
+window.initialize = (x,y,size) ->
+    max_pxcor = x
+    max_pycor = y    
+    patches_size = size
+    patches_radius = patches_size / 2
+    canvas_width = patches_size * max_pxcor
+    canvas_height = patches_size * max_pycor
     create_patches()
     redraw()
-  
+    
 
 #TODO: Sample programs
 # n-queens problem
