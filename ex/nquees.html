@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="us">
+<head>
+<meta charset="utf-8">
+<title>Fink-Nottle Agents</title>
+	<link href="../jquery-ui-1.10.1/css/ui-lightness/jquery-ui-1.10.1.custom.css" rel="stylesheet">
+        <link href="../style.css" rel="stylesheet">
+	<script src="../jquery-ui-1.10.1/js/jquery-1.9.1.js"></script>
+	<script src="../jquery-ui-1.10.1/js/jquery-ui-1.10.1.custom.js"></script>
+<script>
+  $(function() {
+  $("button, input").button();
+});
+</script>
+<script src="../gussie.js"></script>
+<script src="nqueens.js"></script>
+</head>
+<body>
+<h1>N Queens Problem</h1>
+
+<div id="world">
+  <canvas id="patchCanvas"></canvas>
+  <canvas id="turtleCanvas"></canvas>
+</div>
+
+<button id="setupButton">Setup</button>
+<input type="checkbox" id="goButton" /><label for="goButton">Go</label>
+
+<script>document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')</script>
+
+</body>
+
+</html>

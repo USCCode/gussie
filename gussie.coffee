@@ -36,6 +36,8 @@ color =
     magenta: "#FF00FF"
     cyan: "#00FFFF"
 
+window.color = color
+
 #Add methods to the built-in array
 Array::min = ->
     Math.min.apply null,this
@@ -135,6 +137,8 @@ class Turtle
     die: ->
         turtles.delete @who
 
+window.Turtle = Turtle
+
 #Turtleset stores the turtles in @turtles as an object
 # with turtle.key as the key
 #It is a set (no duplicates) based on the key.
@@ -178,7 +182,7 @@ class Turtleset
         return @size
 
     one_of : ->
-        keys = (key for key,turtle of @turtles when turtle)
+        keys = (key for key,turtle of @turtles when turtle) #TODO: @keys optimization
         chosenKey = keys[Math.floor(Math.random() * keys.length)]
         return @turtles[chosenKey]
 
@@ -241,6 +245,8 @@ class Turtleset
 
     draw: ->
         turtle.draw() for key,turtle of @turtles when turtle
+
+window.Turtleset = Turtleset
 
 window.turtles = new Turtleset
 turtles = window.turtles
@@ -334,6 +340,8 @@ create_patches = () ->
             patch(myPxcorP1,myPycorM1),
             patch(myPxcorP1,myPycorP1) ] )
 
+window.Patch = Patch
+
 create_turtles = (num) ->
     for i in [0...num]
         new Turtle
@@ -373,70 +381,4 @@ $ ->
 # n-queens problem
 # grah coloring: link and layout primitives
 # combinatorial auction
-
-# User stuff below...or so that is the plan...............................................
-#
-#
-
-
-go = ->
-#    console.log('calculating')
-#    tm = Date.now()
-#    patches.do -> 
-#        @calculate()
-    turtles.with( -> @who > 0).do ->
-        @heading = @heading + Math.random() - .5
-        @forward 1
-    turtles.withPV('who', 0).do ->
-        myself = @
-        closest = turtles.minus(@).min_one_of(-> @distance myself)
-        @heading = @towards closest
-        @forward 1
-#    console.log('Took ')
-#    console.log(Date.now() - tm)        
-#    console.log('setting new color')        
-#    patches.do ->
-#        @setColor @nextColor
-#    console.log('drawing')        
-#    tm = Date.now()
-    redraw()
-#    console.log('Took ')
-#    console.log(Date.now() - tm)
-    if $('#goButton').prop('checked')
-        setTimeout go,0
-
-setup = ->
-    clear_all()
-    patches.do ->
-        newColor = color.white
-#            newColor = if Math.random() < .5  then color.black else color.white 
-        @setColor newColor
-    create_turtles(3)
-    window.t0 = turtle 0
-    window.t1 = turtle 1
-    window.t1.xcor = 200
-    window.t2 = turtle 2
-    window.t2.xcor = 300
-    redraw()
-    
-#This is how we add a method to an existing class.
-Patch::calculate = ->
-    numLiveNeighbors = @neighbors.withPV('pcolor', color.black).count()
-    #Another way to do it, a bit slower
-    # numLiveNeighbors = @neighbors.with(->
-    #     @pcolor == color.black
-    #     ).count()        
-    @nextColor = @pcolor
-    if @pcolor == color.black
-        if (numLiveNeighbors < 2 or numLiveNeighbors > 3)
-            @nextColor = color.white #die
-    else #dead cell
-        if numLiveNeighbors == 3
-            @nextColor = color.black #live!
-
-
-$ ->
-    $('#setupButton').on('click', setup)
-    $('#goButton').on 'click', go
-    console.log('all systems go')
 
