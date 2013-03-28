@@ -1,4 +1,4 @@
-files = gussie.js gussie.min.js
+files = nqueens.js nqueens.min.js
 
 all: $(files)
 
