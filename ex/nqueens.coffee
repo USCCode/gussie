@@ -1,15 +1,28 @@
 go = ->
+    totalConflicts = 0
     turtles.do ->
         x = @pxcor()
         y = @pycor()
-        conflicts = @other(turtles).with ->
-            @pxcor() == x or @pycor() == y or
-            Math.abs (@pxcor() - x) == Math.abs (@pycor() - y)
-        if conflicts.count() > 0
-            @pxcor((@pxcor() + 1) % 16)
+        bestPos = -1
+        minConflicts = 10000
+        for pos in [0...16]
+            @pxcor pos
+            conflicts = @other(turtles).with ->
+                @pxcor() == pos or @pycor() == y or
+                Math.abs (@pxcor() - pos) == Math.abs (@pycor() - y)
+            if conflicts.count() < minConflicts
+                minConflicts = conflicts.count()
+                bestPos = [pos]
+            if conflicts.count() == minConflicts
+                bestPos.push(pos)
+        totalConflicts += minConflicts
+        @pxcor(bestPos.one_of())
+    console.log totalConflicts + ' conflicts'
     redraw()
-#    if $('#goButton').prop('checked')
-#        setTimeout go,0
+    if totalConflicts == 0
+        $('#goButton').prop('checked',false)
+    if $('#goButton').prop('checked')
+        setTimeout go,0
 
 window.go = go
 

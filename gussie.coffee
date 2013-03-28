@@ -46,6 +46,8 @@ Array::min = ->
 Array::max = ->
     Math.max.apply null,this
 
+Array::one_of = ->
+    @[Math.floor(Math.random() * @length)]
 
 if (typeof Object.create != 'function')
     Object.create =  (o) ->
