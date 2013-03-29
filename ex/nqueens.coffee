@@ -4,7 +4,7 @@ go = ->
         y = @pycor()
         bestPos = -1
         minConflicts = 10000
-        for x in [0...16]
+        for x in [0...size]
             conflicts = @other(turtles).with ->
                 @pxcor() == x or @pycor() == y or
                 Math.abs(@pxcor() - x) == Math.abs(@pycor() - y)
@@ -41,7 +41,12 @@ window.show_conflicts = ->
             return value
         console.log @who + " conflicts=" + conflicts.count()
 
+
+size = 16
+
 setup = ->
+    size = $('#sizeSlider').slider('value')
+    initialize(size,size,20)
     clear_all()
     patches.do ->
         if (@pxcor + @pycor) % 2 == 0 
@@ -49,15 +54,26 @@ setup = ->
         else
             @setColor color.black
     window.t = []
-    for i in [0...16]
+    for i in [0...size]
         window.t[i] = new Turtle
         window.t[i].setpxy i,i
         window.t[i].heading = - Math.PI / 2
     redraw()
     
 $ ->
-    initialize(16,16,20)
+
     $('#setupButton').on('click', setup)
     $('#goButton').on 'click', go
+    $('#sizeSlider').slider
+        min: 8
+        max: size
+        value: size
+        slide: (event,ui) ->
+            $('#boardSize').html(ui.value)
+        create: (event,ui) ->
+            $('#boardSize').html(size)
+
+    initialize(size,size,20)
+    $('#sizeSlider').width(200)
     console.log('all systems go')
 
