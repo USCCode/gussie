@@ -1,5 +1,15 @@
+#frame {
+  width: 700px;
+  height: 700px;
+}
+
+.widget {
+  position: absolute;
+}
+
 #world {
-  position: relative;
+  left: 300px;
+  top: 40px;
 }
 
 #world canvas {

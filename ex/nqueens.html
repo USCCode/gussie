@@ -7,35 +7,32 @@
         <link href="../style.css" rel="stylesheet">
 	<script src="../jquery-ui-1.10.1/js/jquery-1.9.1.js"></script>
 	<script src="../jquery-ui-1.10.1/js/jquery-ui-1.10.1.custom.js"></script>
-<script>
-  $(function() {
-  $("button, input").button();
-});
-</script>
 <script src="../gussie.js"></script>
 <script src="nqueens.js"></script>
 </head>
 <body>
 <h1>N Queens Problem</h1>
 
-<div style="width:600;float:right" id="world">
-  <canvas id="patchCanvas"></canvas>
-  <canvas id="turtleCanvas"></canvas>
-</div>
+<div id="frame">
 
-<div style="padding:10px" id="controls">
   <button id="setupButton">Setup</button>
+
   <input type="checkbox" id="goButton" /><label for="goButton">Go</label>
 
-  <br/>  <br/>
-
-  <div id="sizeSliderContainer">
-    <div id="sizeSlider"></div><br/>
-    Board Size: <span id="boardSize"></span>
+  <div class="ui-widget"  style="border: solid 1px;background-color:#EEEEEE;width:200px;padding: 10px" id="sizeSliderContainer">
+    <div id="sizeSlider"></div>
+    <p style="margin-bottom:0">Board Size: <span id="boardSize"></span></p>
   </div>
+
 
 </div>
 
+<!--
+  <div class="widget" id="world">
+    <canvas id="patchCanvas"></canvas>
+    <canvas id="turtleCanvas"></canvas>
+  </div>
+-->
 
 <script>document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] + ':35729/livereload.js?snipver=1"></' + 'script>')</script>
 

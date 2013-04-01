@@ -392,10 +392,6 @@ window.redraw = redraw
 #Setup the canvas global variables
 $ ->
     console.log('ready')
-    patchCanvas = $('#patchCanvas')
-    patchContext = patchCanvas[0].getContext('2d')
-    turtleCanvas = $('#turtleCanvas')
-    turtleContext = turtleCanvas[0].getContext('2d')
 
 #Create the patches, according to the user's need
 # x,y are the number of patches in each dimension.
@@ -409,6 +405,18 @@ window.initialize = (x,y,size) ->
     canvas_height = patches_size * max_pycor
     create_patches()
     redraw()
+    
+window.make_world = (p) ->
+    $world = $('<div class="widget" id="world"><canvas id="patchCanvas"></canvas><canvas id="turtleCanvas"></canvas></div>')
+    $world.css('top', p.top) if p.top?
+    $world.css('left', p.left) if p.left?
+    $('#frame').append $world
+    patchCanvas = $('#patchCanvas')
+    patchContext = patchCanvas[0].getContext('2d')
+    turtleCanvas = $('#turtleCanvas')
+    turtleContext = turtleCanvas[0].getContext('2d')
+    
+    
     
 
 #TODO: Sample programs
