@@ -23,8 +23,6 @@ go = ->
     if totalConflicts == 0
         $('#goButton').prop('checked',false)
         $('#goButton').button('refresh')
-    if $('#goButton').prop('checked')
-        setTimeout go,0
 
 window.go = go
 size = 16
@@ -50,9 +48,19 @@ $ ->
     make_world
         top: 30
         left: 300
-    $("button, input").button();
-    $('#setupButton').on('click', setup)
-    $('#goButton').on 'click', go
+    make_button
+        top: 50
+        left: 10
+        label: 'Setup'
+        id: 'setupButton'
+        click: setup
+    make_button
+        top: 50
+        left: 100
+        label: 'Go'
+        id: 'goButton'
+        toggle: true
+        click: go
     $('#sizeSlider').slider
         min: 8
         max: 32
@@ -63,36 +71,5 @@ $ ->
             $('#boardSize').html(size)
     $('#sizeSlider').width('200px')
     initialize(size,size,20)
-
     console.log('all systems go')
 
-#getId() and setID(x) are declared for slider.
-# $('#ID').get = -> $('#ID').slider('value')
-test = ->
-    make_button
-        top: 10
-        left: 20
-        width: 100
-        height: 50
-        label: 'Setup'
-        click: setup
-    make_button
-        top: 10
-        left: 130
-        width: 100
-        height: 50
-        label: 'Go'
-        toggle: true
-        click: go
-    make_slider
-        top: 300
-        left: 20
-        width: 400
-        height: 100
-        label: 'Board Size'
-        id: 'sizeSlider'
-    make_world
-        top: 10
-        left: 400
-        
-        

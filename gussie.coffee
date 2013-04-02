@@ -415,8 +415,32 @@ window.make_world = (p) ->
     patchContext = patchCanvas[0].getContext('2d')
     turtleCanvas = $('#turtleCanvas')
     turtleContext = turtleCanvas[0].getContext('2d')
+
+
+_forever_call = (f, id) ->
+    fun = ->
+        if $('#' + id).prop('checked')
+            f()
+            setTimeout fun,0
+    return fun
     
-    
+window.make_button = (p) ->
+    id = p.id
+    if p.toggle?
+        $button = $("<input class=\"widget\" type=\"checkbox\" id=\"#{id}\"/>
+            <label class=\"widget\" for=\"#{p.id}\">#{p.label}</label>")
+    else
+        $button = $("<button class=\"widget\" id=\"#{p.id}\">#{p.label}</button>)")
+    $('#frame').append $button
+    if p.toggle?
+        $button.on('change',_forever_call(p.click,p.id))
+    else
+        $button.on('click',p.click)
+    $button.css('top', p.top) if p.top?
+    $button.css('left', p.left) if p.left?
+    $('#'+ p.id).button()
+
+
     
 
 #TODO: Sample programs
