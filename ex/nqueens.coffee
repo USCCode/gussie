@@ -21,15 +21,16 @@ go = ->
     console.log totalConflicts + ' conflicts'
     redraw()
     if totalConflicts == 0
-        $('#goButton').prop('checked',false)
+        $('#goButton').prop('checked',false) #add $.fn.checked() ???
         $('#goButton').button('refresh')
 
 window.go = go
 size = 16 #I need this global in go()
+worldSize = 400 #in pixels
 
 setup = ->
     size = $('#sizeSlider').slider('value')
-    width = 400 / size
+    width = worldSize / size
     make_patches
         pxmax: size
         pymax: size
@@ -51,6 +52,8 @@ $ ->
     make_world
         top: 30
         left: 300
+        width: worldSize
+        height: worldSize
     make_button
         top: 50
         left: 10
@@ -70,7 +73,7 @@ $ ->
         width: 200
         min: 8
         max: 32
-        value: 16
+        value: size
         id: 'sizeSlider'
         label: 'Board Size:'
     console.log('all systems go')

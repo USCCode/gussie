@@ -12,13 +12,11 @@ button {
 }
 
 .widget p {
-  margin: 10px;
+  margin: 10px 0 0 0;
 }
 
-
 #world {
-  left: 300px;
-  top: 40px;
+  border: solid 1px;
 }
 
 #world canvas {
@@ -26,7 +24,6 @@ button {
   position: absolute;
   left: 0;
   top: 0;
-  border: solid 1px;
 }
 
 #patchCanvas {
@@ -40,6 +37,5 @@ button {
 .sliderContainer {
   border: solid 1px;
   background-color:#EEEEEE;
-  width:200px;
-  padding:10px;
+  padding:15px;
 }

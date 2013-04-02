@@ -410,6 +410,8 @@ window.make_world = (p) ->
     $world = $('<div class="widget" id="world"><canvas id="patchCanvas"></canvas><canvas id="turtleCanvas"></canvas></div>')
     $world.css('top', p.top) if p.top?
     $world.css('left', p.left) if p.left?
+    $world.width p.width if p.width?
+    $world.height p.height if p.height?
     $('#frame').append $world
     patchCanvas = $('#patchCanvas')
     patchContext = patchCanvas[0].getContext('2d')
@@ -442,7 +444,7 @@ window.make_button = (p) ->
 
 window.make_slider = (p) ->
     displayID = p.id + 'Display'
-    $slider =  $("<div class=\"ui-widget widget sliderContainer\"><div id=\"#{p.id}\"></div><p style=\"margin-bottom:0\">#{p.label}<span id=\"#{displayID}\"></span></p></div>")
+    $slider =  $("<div class=\"ui-widget widget sliderContainer\"><div id=\"#{p.id}\"></div><p>#{p.label}<span id=\"#{displayID}\"></span></p></div>")
     $slider.css('top', p.top) if p.top?
     $slider.css('left', p.left) if p.left?
     $('#frame').append $slider
@@ -459,7 +461,9 @@ window.make_slider = (p) ->
 
 
 #TODO: Sample programs
-# n-queens problem
 # grah coloring: link and layout primitives
+# active edges:
+#   graph-oriented programming: Following Sussman's paper where a node
+#   holds variables and edges represnt evidence for the vars' values.
 # combinatorial auction
 
