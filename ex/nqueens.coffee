@@ -25,12 +25,15 @@ go = ->
         $('#goButton').button('refresh')
 
 window.go = go
-size = 16
+size = 16 #I need this global in go()
 
 setup = ->
     size = $('#sizeSlider').slider('value')
     width = 400 / size
-    initialize(size,size,width)
+    make_patches
+        pxmax: size
+        pymax: size
+        size: width
     clear_all()
     patches.do ->
         if (@pxcor + @pycor) % 2 == 0 
@@ -61,15 +64,14 @@ $ ->
         id: 'goButton'
         toggle: true
         click: go
-    $('#sizeSlider').slider
+    make_slider
+        top: 100
+        left: 10
+        width: 200
         min: 8
         max: 32
-        value: size
-        slide: (event,ui) ->
-            $('#boardSize').html(ui.value)
-        create: (event,ui) ->
-            $('#boardSize').html(size)
-    $('#sizeSlider').width('200px')
-    initialize(size,size,20)
+        value: 16
+        id: 'sizeSlider'
+        label: 'Board Size:'
     console.log('all systems go')
 

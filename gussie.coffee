@@ -394,12 +394,12 @@ $ ->
     console.log('ready')
 
 #Create the patches, according to the user's need
-# x,y are the number of patches in each dimension.
+# pxmax,pymax are the number of patches in each dimension.
 # size: is the size of the patches in pixels. Patches are square.
-window.initialize = (x,y,size) ->
-    max_pxcor = x
-    max_pycor = y    
-    patches_size = size
+window.make_patches = (p) ->
+    max_pxcor = p.pxmax
+    max_pycor = p.pymax    
+    patches_size = p.size
     patches_radius = patches_size / 2
     canvas_width = patches_size * max_pxcor
     canvas_height = patches_size * max_pycor
@@ -440,8 +440,23 @@ window.make_button = (p) ->
     $button.css('left', p.left) if p.left?
     $('#'+ p.id).button()
 
+window.make_slider = (p) ->
+    displayID = p.id + 'Display'
+    $slider =  $("<div class=\"ui-widget widget sliderContainer\"><div id=\"#{p.id}\"></div><p style=\"margin-bottom:0\">#{p.label}<span id=\"#{displayID}\"></span></p></div>")
+    $slider.css('top', p.top) if p.top?
+    $slider.css('left', p.left) if p.left?
+    $('#frame').append $slider
+    $slider.width p.width if p.width?
+    $slider.height p.height if p.height?
+    $('#' + p.id).slider
+        min: p.min
+        max: p.max
+        value: p.value
+        slide: (event,ui) ->
+            $('#' + displayID).html(ui.value)
+        create: (event,ui) ->
+            $('#' + displayID).html(16)
 
-    
 
 #TODO: Sample programs
 # n-queens problem
