@@ -59,27 +59,37 @@ if (typeof Object.create != 'function')
 #The Turtle
 class Turtle
     constructor: ->
-        @xcor = 100
-        @ycor = 100
+        @_xcor = 100 # @_ means private instance variable: OBEY
+        @_ycor = 100
         @heading = 0
         @who = who++
         @color = color.red
         turtles.add(@)
+
+    xcor: (x) ->
+        @_xcor = x if x?
+        return @_xcor
+
+    ycor: (y) ->
+        @_ycor = y if y?
+        return @_ycor
 
     key: ->
         @who
 
     pxcor: (px) ->
         if px?
-            @xcor = px * patches_size + patches_radius
-        return Math.floor (@xcor / patches_size)
+            @xcor(px * patches_size + patches_radius)
+        return Math.floor (@xcor() / patches_size)
 
     pycor: (py) ->
         if py?
-            @ycor = py * patches_size + patches_radius
-        return Math.floor (@ycor / patches_size)
+            @ycor(py * patches_size + patches_radius)
+        return Math.floor (@ycor() / patches_size)
 
-    setxy: (@xcor,@ycor) ->
+    setxy: (x,y) ->
+        @xcor(x)
+        @ycor(y)
 
     setpxy: (x,y) ->
         @pxcor(x)
@@ -88,7 +98,7 @@ class Turtle
     draw: ->
         turtleContext.save()
         turtleContext.fillStyle = @color
-        turtleContext.translate(Math.round(@xcor),Math.round(@ycor))
+        turtleContext.translate(Math.round(@xcor()),Math.round(@ycor()))
         turtleContext.rotate(@heading)
         turtleContext.beginPath()
         turtleContext.moveTo(0,0)
@@ -107,46 +117,48 @@ class Turtle
         distance = distance * patches_size
         dx = Math.cos(this.heading) * distance
         dy = Math.sin(this.heading) * distance
-        @xcor += dx
-        @ycor += dy
-        [@xcor, @ycor] = wrap(@xcor,@ycor)
+        @xcor(@xcor() + dx)
+        @ycor(@ycor() + dy)
+        [x, y] = wrap(@xcor(),@ycor())
+        @xcor(x)
+        @ycor(y)
         return @
 
     # Return the angle that would make this turtle point to otherx,othery
     # We look for the min
     towardsxy: (otherx,othery) ->
-        dx = otherx - @xcor
-        dy = othery - @ycor
+        dx = otherx - @xcor()
+        dy = othery - @ycor()
 
         #Wraparound fix
         if 2 * Math.abs(dx) > canvas_width #it is closer to go around
             if dx > 0 #he is to my right
-                otherx = @xcor - canvas_width + dx
+                otherx = @xcor() - canvas_width + dx
             if dx < 0 #he is to my left
-                otherx = @xcor + canvas_width + dx
-            dx = otherx - @xcor
+                otherx = @xcor() + canvas_width + dx
+            dx = otherx - @xcor()
         if 2 * Math.abs(dy) > canvas_height #it is closer to go around
             if dy > 0 
-                othery = @ycor - canvas_height + dy
+                othery = @ycor() - canvas_height + dy
             if dy < 0 
-                othery = @ycor + canvas_height + dy
-            dy = othery - @ycor
+                othery = @ycor() + canvas_height + dy
+            dy = othery - @ycor()
 
         angle = Math.atan (dy / dx)
         angle = angle + Math.PI if dx < 0
         return angle
 
     towards: (other) ->
-        return @towardsxy(other.xcor, other.ycor)
+        return @towardsxy(other.xcor(), other.ycor())
 
     distancexy: (otherx,othery) ->
-        dx = Math.abs (otherx - @xcor)
-        dy = Math.abs (othery - @ycor)
+        dx = Math.abs (otherx - @xcor())
+        dy = Math.abs (othery - @ycor())
         return Math.sqrt(Math.pow(Math.min(dx, canvas_width - dx), 2)
             + Math.pow(Math.min(dy, canvas_height - dy),2) )
 
     distance: (other) ->
-        @distancexy other.xcor,other.ycor
+        @distancexy other.xcor(),other.ycor()
 
     face: (other) ->
         @heading = @towards other
@@ -287,10 +299,10 @@ patch = (x,y) ->
 
 class Patch extends Turtle
     constructor: (@pxcor, @pycor)->
-        @xcor = 0 # the center point of the patch
-        @ycor = 0
-        @pxcor = 0 # the patch's position (in patch coordinates)
-        @pycor = 0
+        @xcor(0) # the center point of the patch
+        @ycor(0)
+        @pxcor = 0 # OVERRIDE Turtle.pxcor
+        @pycor = 0 # the patch's position (in patch coordinates)
         @pcxcor = 0 #the top-left point of the patch, in pixels, used for drawing
         @pcycor = 0
         @pcolor = "#AA5555"

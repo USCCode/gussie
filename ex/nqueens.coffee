@@ -67,6 +67,12 @@ $ ->
         id: 'goButton'
         toggle: true
         click: go
+    make_button
+        top: 50
+        left: 165
+        label: 'Step'
+        id: 'stepButton'
+        click: go        
     make_slider
         top: 100
         left: 10
