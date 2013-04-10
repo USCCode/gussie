@@ -64,6 +64,8 @@ class Turtle
         @heading = 0
         @who = who++
         @color = color.red
+        @myLinks = new Turtleset
+        @size = 1
         turtles.add(@)
 
     xcor: (x) ->
@@ -95,10 +97,16 @@ class Turtle
         @pxcor(x)
         @pycor(y)
 
+    myLinks: -> @_myLinks
+
+    createLinkWith: (other) ->
+        @myLinks.add(new Link(@,other))
+
     draw: ->
         turtleContext.save()
         turtleContext.fillStyle = @color
         turtleContext.translate(Math.round(@xcor()),Math.round(@ycor()))
+        turtleContext.scale(@size,@size)
         turtleContext.rotate(@heading)
         turtleContext.beginPath()
         turtleContext.moveTo(0,0)
@@ -174,52 +182,98 @@ class Turtle
 
 window.Turtle = Turtle
 
-#Turtleset stores the turtles in @turtles as an object
+class Link extends Turtle
+
+    #a,b are start and end Turtle
+    constructor: (@a,@b)->
+        @heading = 0
+        @who = who++
+        @color = color.black        
+        @directed = false
+        @size = 1
+        window.links.add(@)
+
+    xcor: -> @_xcor #Override. Can't set this.
+    ycor: -> @_ycor
+
+    fixCoords: ->
+        @_xcor = @a.xcor()
+        @_ycor = @a.ycor()
+        @face(@b) #set my direction
+        @_xcor = (@b.xcor() + @a.xcor()) / 2
+        @_ycor = (@b.ycor() + @a.ycor()) / 2
+        distance = Math.sqrt(Math.pow(@b.xcor() - @a.xcor(), 2) + Math.pow(@b.ycor() - @a.ycor(),2))
+        @size = distance / (2 * patches_radius)
+
+        return @
+
+    draw: ->
+        turtleContext.save()
+        turtleContext.fillStyle = @color
+        turtleContext.translate(Math.round(@xcor()),Math.round(@ycor()))
+        turtleContext.rotate(@heading)
+        turtleContext.beginPath()
+        startx = -patches_radius * @size + patches_radius #hit the end of the circle around b
+        endx = patches_radius * @size - patches_radius
+        turtleContext.moveTo(startx,0)
+        turtleContext.lineTo(endx,0)
+        if @directed
+            tip = patches_radius / 2
+            turtleContext.lineTo(endx - tip, -tip)
+            turtleContext.moveTo(endx,0)
+            turtleContext.lineTo(endx - tip, tip)
+        turtleContext.stroke()
+        turtleContext.restore()
+        return @
+
+
+
+#Turtleset stores the turtles in @_turtles as an object
 # with turtle.key as the key
 #It is a set (no duplicates) based on the key.
-#NOTE: It can be that @turtles[x] == undefined, for some x,
+#NOTE: It can be that @_turtles[x] == undefined, for some x,
 # this is how we remove a turtle from the set so that it is not inherited from its parent.
 # 
 class Turtleset
     constructor: (array) -> #TODO: check that array is an Array
-        @turtles = {}
+        @_turtles = {}
         @size = 0
         if array
             for turtle in array
                 @add turtle
 
     add: (turtle) ->
-        if not @turtles.hasOwnProperty turtle.key or not @turtles[turtle.key()]
+        if not @_turtles.hasOwnProperty turtle.key or not @_turtles[turtle.key()]
             @size++
-        @turtles[turtle.key()] = turtle
+        @_turtles[turtle.key()] = turtle
         return @
 
     #Return a new turtleset with all the same turtles except 'turtle'
     #The returned turtleset inherits from this one, but with turtle delete (set to undefined)
     minus: (turtle) ->
         nt = Object.create @
-        nt.turtles = Object.create @turtles
+        nt.turtles = Object.create @_turtles
         nt.turtles[turtle.key()] = undefined
         nt.size--
         return nt
-#        return new Turtleset (t for key,t of @turtles when t.who != turtle.who)
+#        return new Turtleset (t for key,t of @_turtles when t.who != turtle.who)
 
     get: (key) ->
-        @turtles[key]
+        @_turtles[key]
 
     #Returns an array with the values of the given property for all, like 'of'
     values: (property) ->
         if property instanceof Function
-            return (property.apply(turtle) for key,turtle of @turtles when turtle?)
-        return (turtle[property] for key,turtle of @turtles when turtle?)
+            return (property.apply(turtle) for key,turtle of @_turtles when turtle?)
+        return (turtle[property] for key,turtle of @_turtles when turtle?)
 
     count: ->
         return @size
 
     one_of : ->
-        keys = (key for key,turtle of @turtles when turtle?) #TODO: @keys optimization
+        keys = (key for key,turtle of @_turtles when turtle?) #TODO: @keys optimization
         chosenKey = keys[Math.floor(Math.random() * keys.length)]
-        return @turtles[chosenKey]
+        return @_turtles[chosenKey]
 
     #Returns a turtleset containing all the turtles that have a minimal value for prop
     min_of : (prop) ->
@@ -250,7 +304,7 @@ class Turtleset
         
     with: (f) ->
         result = Object.create @
-        result.turtles = Object.create @turtles
+        result.turtles = Object.create @_turtles
         for key,turtle of result.turtles when turtle?
             if not f.apply(turtle)
                 result.turtles[key] = undefined
@@ -259,7 +313,7 @@ class Turtleset
 
     withPV: (property, value) ->
         result = Object.create @
-        result.turtles = Object.create @turtles
+        result.turtles = Object.create @_turtles
         for key,turtle of result.turtles when turtle?
             if property instanceof Function
                 if property.apply(turtle) != value
@@ -271,15 +325,19 @@ class Turtleset
         return result        
 
     do: (f) ->
-        for key,turtle of @turtles when turtle?
+        for key,turtle of @_turtles when turtle?
             f.apply(turtle)
+
+    doOwn: (f) ->
+        for key,turtle of @_turtles when turtle?
+            turtle[f]()
 
     delete: (who) ->
         @size--
-        @turtles[who] = undefined
+        @_turtles[who] = undefined
 
     draw: ->
-        turtle.draw() for key,turtle of @turtles when turtle?
+        turtle.draw() for key,turtle of @_turtles when turtle?
 
 window.Turtleset = Turtleset
 
@@ -288,7 +346,9 @@ turtles = window.turtles
 
 turtle = (w) ->
     turtles.get(w)
-        
+
+window.links = new Turtleset
+links = window.links
 
 #global var where we store a Turtleset of patches
 window.patches = 0
@@ -383,6 +443,7 @@ create_turtles = (num) ->
 
 clear_all = ->
     turtles.do( -> @die())
+    links.do( -> @die())
     patches = {}
     who = 0
     create_patches()
@@ -398,6 +459,8 @@ redraw =  ->
     patches.draw()
     turtleContext.clearRect(0,0,turtleCanvas.width(), turtleCanvas.height())
     turtles.draw()
+    links.doOwn('fixCoords')
+    links.draw()
 
 window.redraw = redraw
 
