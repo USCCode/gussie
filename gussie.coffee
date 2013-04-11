@@ -1,3 +1,7 @@
+##....working on changing turtleset to make a copy on .with()
+#  all turtlesets should be copies, and turtles point back to their
+#   turtlesets so they can delete themselves when they die.
+# 
 #gussie.coffee by jmvidal@gmail.com
 # no bugs here, just lots of newts
 #
@@ -49,12 +53,29 @@ Array::max = ->
 Array::one_of = ->
     @[Math.floor(Math.random() * @length)]
 
+# Array Remove - By John Resig (MIT Licensed)
+# from,to are indeces
+Array::remove = (from, to) ->
+  rest = @slice((to || from) + 1 || @length)
+  @length =  if (from < 0) then (@length + from) else from
+  @push.apply(@, rest)
+
+# Remove element if it exists.
+Array::eliminate = (element) ->
+    i = @indexOf(element)
+    if i >= 0
+        @remove(i)
+    return @
+
+
 if (typeof Object.create != 'function')
     Object.create =  (o) ->
         F = -> 
         F.prototype = o
         return new F()
 
+# a Turtle keeps track of all the sets it is in with @_sets
+# when it dies it removes itself from all those sets.
 
 #The Turtle
 class Turtle
@@ -66,7 +87,15 @@ class Turtle
         @color = color.red
         @myLinks = new Turtleset
         @size = 1
-        turtles.add(@)
+        @_sets = [] #array of all the Turtlesets that I belong to        
+        turtles.add(@) #all turtles are in the turtles set
+
+    # Add me Turtleset tset
+    addTo: (tset) ->
+        @_sets.push(tset)
+
+    removeFrom: (tset) ->
+        @_sets.eliminate(tset)
 
     xcor: (x) ->
         @_xcor = x if x?
@@ -78,7 +107,6 @@ class Turtle
 
     key: ->
         @who
-
     pxcor: (px) ->
         if px?
             @xcor(px * patches_size + patches_radius)
@@ -172,9 +200,10 @@ class Turtle
         @heading = @towards other
         return @
 
-    #A turtle dies by removing itself from the 'turtles' global variable.
+    #A turtle dies by removing itself from all its @_sets (which includes 'turtles')
     die: ->
-        turtles.delete @who
+        for tset in @_sets
+            tset.remove(@)
 
     #remove this turtle from tset turtleset and return that
     other: (tset) ->
@@ -231,8 +260,9 @@ class Link extends Turtle
 #Turtleset stores the turtles in @_turtles as an object
 # with turtle.key as the key
 #It is a set (no duplicates) based on the key.
-#NOTE: It can be that @_turtles[x] == undefined, for some x,
-# this is how we remove a turtle from the set so that it is not inherited from its parent.
+#
+# @with and other commands return a COPY of this turtleset, but the @_turtles themselves
+#   are not copied (that would not make sense, we only want one copy of each turtle).
 # 
 class Turtleset
     constructor: (array) -> #TODO: check that array is an Array
@@ -245,18 +275,24 @@ class Turtleset
     add: (turtle) ->
         if not @_turtles.hasOwnProperty turtle.key or not @_turtles[turtle.key()]
             @size++
+            turtle.addTo(@)
         @_turtles[turtle.key()] = turtle
         return @
 
     #Return a new turtleset with all the same turtles except 'turtle'
     #The returned turtleset inherits from this one, but with turtle delete (set to undefined)
     minus: (turtle) ->
-        nt = Object.create @
-        nt.turtles = Object.create @_turtles
-        nt.turtles[turtle.key()] = undefined
-        nt.size--
-        return nt
-#        return new Turtleset (t for key,t of @_turtles when t.who != turtle.who)
+        c = new Turtleset
+        for key,t of @_turtles when t != turtle
+            c.add t
+        return c
+
+    # Return a new Turtleset which is a copy of this one
+    copy: ->
+        c = new Turtleset
+        for key,turtle of @_turtles
+            c.add turtle
+        return c
 
     get: (key) ->
         @_turtles[key]
@@ -264,14 +300,14 @@ class Turtleset
     #Returns an array with the values of the given property for all, like 'of'
     values: (property) ->
         if property instanceof Function
-            return (property.apply(turtle) for key,turtle of @_turtles when turtle?)
-        return (turtle[property] for key,turtle of @_turtles when turtle?)
+            return (property.apply(turtle) for key,turtle of @_turtles)
+        return (turtle[property] for key,turtle of @_turtles)
 
     count: ->
         return @size
 
     one_of : ->
-        keys = (key for key,turtle of @_turtles when turtle?) #TODO: @keys optimization
+        keys = (key for key,turtle of @_turtles) #TODO: @keys optimization
         chosenKey = keys[Math.floor(Math.random() * keys.length)]
         return @_turtles[chosenKey]
 
@@ -303,41 +339,37 @@ class Turtleset
         return @max_of(prop).one_of()
         
     with: (f) ->
-        result = Object.create @
-        result.turtles = Object.create @_turtles
-        for key,turtle of result.turtles when turtle?
-            if not f.apply(turtle)
-                result.turtles[key] = undefined
-                result.size--
+        result = new Turtleset
+        for key,turtle of @_turtles when turtle?
+            if f.apply(turtle)
+                result.add turtle
         return result
 
     withPV: (property, value) ->
-        result = Object.create @
-        result.turtles = Object.create @_turtles
-        for key,turtle of result.turtles when turtle?
+        result = new Turtleset
+        for key,turtle of result.turtles
             if property instanceof Function
-                if property.apply(turtle) != value
-                    result.turtles[key] = undefined
-                    result.size--
-            else if turtle[property] != value
-                result.turtles[key] = undefined
-                result.size--
+                if property.apply(turtle) == value
+                    result.add turtle
+            else if turtle[property] == value
+                result.add turtle
         return result        
 
     do: (f) ->
-        for key,turtle of @_turtles when turtle?
+        for key,turtle of @_turtles
             f.apply(turtle)
 
     doOwn: (f) ->
-        for key,turtle of @_turtles when turtle?
+        for key,turtle of @_turtles
             turtle[f]()
 
-    delete: (who) ->
+    # Remove turtle from this turtleset, nothing more.
+    remove: (turtle) ->
         @size--
-        @_turtles[who] = undefined
+        delete @_turtles[turtle.key()]
 
     draw: ->
-        turtle.draw() for key,turtle of @_turtles when turtle?
+        turtle.draw() for key,turtle of @_turtles
 
 window.Turtleset = Turtleset
 
@@ -369,6 +401,8 @@ class Patch extends Turtle
         @drawnColor = null
         @neighbors = null  #a turtleset with my neighbors
         @who = @key()
+        @_sets = [patches] #array of all the Turtlesets that I belong to
+
 
     draw: ->
         if not (@drawnColor == @pcolor)
