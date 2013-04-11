@@ -1,3 +1,4 @@
 gussie.js
 *.min.js
 ex/*.js
+.DS_Store
