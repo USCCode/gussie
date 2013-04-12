@@ -87,7 +87,8 @@ class Turtle
         @color = color.red
         @myLinks = new Turtleset
         @size = 1
-        @_sets = [] #array of all the Turtlesets that I belong to        
+        @_sets = [] #array of all the Turtlesets that I belong to
+        @shape = 'default'
         turtles.add(@) #all turtles are in the turtles set
 
     # Add me Turtleset tset
@@ -107,6 +108,7 @@ class Turtle
 
     key: ->
         @who
+        
     pxcor: (px) ->
         if px?
             @xcor(px * patches_size + patches_radius)
@@ -128,7 +130,17 @@ class Turtle
     myLinks: -> @_myLinks
 
     createLinkWith: (other) ->
-        @myLinks.add(new Link(@,other))
+        link = new Link(@,other)
+        @myLinks.add(link)
+        other.myLinks.add(link)
+
+    linkNeighbors: ->
+        myself = @
+        new Turtleset @myLinks.values ->
+            if @a == myself then @b else @a
+
+    do: (f) ->
+        f.apply(@)
 
     draw: ->
         turtleContext.save()
@@ -136,13 +148,17 @@ class Turtle
         turtleContext.translate(Math.round(@xcor()),Math.round(@ycor()))
         turtleContext.scale(@size,@size)
         turtleContext.rotate(@heading)
-        turtleContext.beginPath()
-        turtleContext.moveTo(0,0)
-        turtleContext.lineTo(-patches_radius,-patches_radius)
-        turtleContext.lineTo(patches_radius,0)
-        turtleContext.lineTo(-patches_radius,patches_radius)
-        turtleContext.lineTo(0,0)
-        turtleContext.fill()
+        if @shape == 'circle'
+            turtleContext.arc(0,0,patches_radius,0,2*Math.PI)
+            turtleContext.fill()
+        else
+            turtleContext.beginPath()
+            turtleContext.moveTo(0,0)
+            turtleContext.lineTo(-patches_radius,-patches_radius)
+            turtleContext.lineTo(patches_radius,0)
+            turtleContext.lineTo(-patches_radius,patches_radius)
+            turtleContext.lineTo(0,0)
+            turtleContext.fill()
         turtleContext.restore()
         return @
         
@@ -220,7 +236,8 @@ class Link extends Turtle
         @color = color.black        
         @directed = false
         @size = 1
-        window.links.add(@)
+        @_sets = [] #array of all the Turtlesets that I belong to
+        links.add(@)
 
     xcor: -> @_xcor #Override. Can't set this.
     ycor: -> @_ycor

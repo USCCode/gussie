@@ -1,4 +1,4 @@
-files = nqueens.js nqueens.min.js
+files = nqueens.js nqueens.min.js graph.js graph.min.js
 
 all: $(files)
 
