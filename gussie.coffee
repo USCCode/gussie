@@ -81,7 +81,7 @@ if (typeof Object.create != 'function')
 class Turtle
     constructor: ->
         @_xcor = 100 # @_ means private instance variable: OBEY
-        @_ycor = 100
+        @_ycor = 100 
         @heading = 0
         @who = who++
         @color = color.red
@@ -143,6 +143,36 @@ class Turtle
         f.apply(@)
 
     draw: ->
+        @drawShape()
+
+        # Calculate wraparound coordinates: NOTE: this only works for
+        # shapes that wrap around ONCE, and no more. It does not handle bigger shapes.
+        radius = @size * patches_radius
+        ox = @_xcor
+        oy = @_ycor
+        nx = @_xcor
+        nx = @_xcor - canvas_width if @_xcor + radius > canvas_width
+        nx = canvas_width + @_xcor if @_xcor - radius < 0
+        ny = @_ycor
+        ny = @_ycor - canvas_width if @_ycor + radius > canvas_height
+        ny = canvas_height + @_ycor if @_ycor - radius < 0
+        if nx != ox
+            @xcor(nx)
+            @drawShape()
+            @xcor(ox)
+        if ny != oy
+            @ycor(ny)
+            @drawShape()
+            @ycor(oy)
+        if nx != ox and ny != oy
+            @xcor(nx)
+            @ycor(ny)
+            @drawShape()
+            @xcor(ox)
+            @ycor(oy)
+        return @
+
+    drawShape: ->
         turtleContext.save()
         turtleContext.fillStyle = @color
         turtleContext.translate(Math.round(@xcor()),Math.round(@ycor()))
@@ -206,8 +236,8 @@ class Turtle
     distancexy: (otherx,othery) ->
         dx = Math.abs (otherx - @xcor())
         dy = Math.abs (othery - @ycor())
-        return Math.sqrt(Math.pow(Math.min(dx, canvas_width - dx), 2)
-            + Math.pow(Math.min(dy, canvas_height - dy),2) )
+        return Math.sqrt(Math.pow(Math.min(dx, canvas_width - dx), 2) + Math.pow(Math.min(dy, canvas_height - dy),2) ) / (2 * patches_radius)
+
 
     distance: (other) ->
         @distancexy other.xcor(),other.ycor()
@@ -239,28 +269,27 @@ class Link extends Turtle
         @_sets = [] #array of all the Turtlesets that I belong to
         links.add(@)
 
-    xcor: -> @_xcor #Override. Can't set this.
-    ycor: -> @_ycor
-
     fixCoords: ->
         @_xcor = @a.xcor()
         @_ycor = @a.ycor()
         @face(@b) #set my direction
-        @_xcor = (@b.xcor() + @a.xcor()) / 2
-        @_ycor = (@b.ycor() + @a.ycor()) / 2
-        distance = Math.sqrt(Math.pow(@b.xcor() - @a.xcor(), 2) + Math.pow(@b.ycor() - @a.ycor(),2))
-        @size = distance / (2 * patches_radius)
-
+        console.log 'calling distance'
+        length = @distance @b
+        console.log 'distance=' + length
+        @size = length 
+        @forward(@size / 2)
         return @
-
-    draw: ->
+        
+    drawShape: ->
         turtleContext.save()
         turtleContext.fillStyle = @color
+        turtleContext.strokeStyle = @color
+        turtleContext.lineWidth = 2 #if this is 1 then horizontal line disappears.
         turtleContext.translate(Math.round(@xcor()),Math.round(@ycor()))
         turtleContext.rotate(@heading)
-        turtleContext.beginPath()
-        startx = -patches_radius * @size + patches_radius #hit the end of the circle around b
-        endx = patches_radius * @size - patches_radius
+        turtleContext.beginPath()        
+        startx = -patches_radius * @size #+ patches_radius #hit the end of the circle around b
+        endx = patches_radius * @size #- patches_radius
         turtleContext.moveTo(startx,0)
         turtleContext.lineTo(endx,0)
         if @directed
@@ -435,6 +464,7 @@ class Patch extends Turtle
     neighbors: () ->
         return @neighbors
 
+# Returns coordinates that are within the canvas, by wrapping around
 wrap = (x,y) ->
     x = x % canvas_width
     x =  canvas_width + x if x < 0
