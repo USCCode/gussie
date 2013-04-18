@@ -3,21 +3,35 @@
 #
 
 setup = ->
+    clear_all()
     make_patches
         pxmax: 10
         pymax: 10
         size: 40
-    clear_all()
     patches.do ->
         @pcolor = color.white
     window.t = []
-    for i in [0...10]
+    for i in [0...9]
         window.t[i] = new Turtle
         window.t[i].do ->
-            @setpxy i,i
-            @heading = - Math.PI / 2
-            @shape = 'circle'
+            @setpxy(i, Math.random() * 10)
+#            @xcor(@xcor() )
+#            @ycor(@ycor() + 15)
+            @heading = 0 # - Math.PI / 2
+#            @shape = 'circle'
+    window.t[8].do ->
+        @heading = @towards(window.t[0])
+    window.t[8].createLinkWith(window.t[0])
+    window.t[1].createLinkWith(window.t[2])
+    window.t[2].createLinkWith(window.t[3])
+    window.t[2].createLinkWith(window.t[4])
     redraw()
+
+
+go = ->
+    layout_magspring(10)
+    redraw()
+    
     
 $ ->
     make_world
@@ -31,5 +45,18 @@ $ ->
         label: 'Setup'
         id: 'setupButton'
         click: setup
+    make_button
+        top: 50
+        left: 100
+        label: 'Step'
+        id: 'stepButton'
+        click: go        
+    make_button
+        top: 50
+        left: 180
+        label: 'Go'
+        id: 'goButton'
+        click: go
+        toggle: true
     console.log('all systems go')
 

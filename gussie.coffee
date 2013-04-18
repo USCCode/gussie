@@ -195,6 +195,12 @@ class Turtle
     setHeading: (@heading) -> 
         return @
 
+    dx: ->
+        return Math.cos @heading
+
+    dy: ->
+        return Math.sin @heading
+
     forward: (distance) ->
         distance = distance * patches_size
         dx = Math.cos(this.heading) * distance
@@ -273,9 +279,7 @@ class Link extends Turtle
         @_xcor = @a.xcor()
         @_ycor = @a.ycor()
         @face(@b) #set my direction
-        console.log 'calling distance'
         length = @distance @b
-        console.log 'distance=' + length
         @size = length 
         @forward(@size / 2)
         return @
@@ -518,6 +522,63 @@ create_patches = () ->
 
 window.Patch = Patch
 
+
+class Vector
+    constructor: (@dx,@dy) ->
+
+    add: (v) ->
+        new Vector(@dx+v.dx, @dy+v.dy)
+
+    scale: (c) ->
+        new Vector(@dx*c, @dy*c)
+
+#Layout all the turtles given all the links.
+# turtles repel each other 1/d^2
+# linked turtles are attracted/repelled to the link's springLength
+layout_magspring = (springLength )->
+    remainingTurtles = turtles.copy()
+    turtles.do ->
+        @forces = []
+    turtles.do ->
+        from = @
+        remainingTurtles = remainingTurtles.minus(@)
+        remainingTurtles.do ->
+            #apply repulsive force between 'from' and '@'
+            oldHeading = @heading
+            @face(from)
+            hisForce = new Vector(@dx(), @dy())
+            d = @distance(from)
+            hisForce = hisForce.scale(1 / (d * d))
+            from.forces.push(hisForce)
+            myForce = hisForce.scale(-1)
+            @forces.push(myForce)
+            @heading = oldHeading
+    links.do ->
+        a = @a
+        b = @b
+        @a.do ->
+            oldHeading = @heading
+            @face(b)
+            if @distance(b) > springLength
+                bForce = new Vector(@dx(),@dy())
+                b.forces.push(bForce)
+                aForce = bForce.scale(-1)
+                @forces.push(aForce)
+            else 
+                aForce = new Vector(@dx(),@dy())
+                @forces.push(aForce)                
+                bForce = aForce.scale(-1)                
+                b.forces.push(bForce)
+            @heading = oldHeading
+    turtles.do ->
+        @totalForce = @forces.reduce (a,b) ->
+            a.add(b)
+        @xcor(@xcor() + @totalForce.dx)
+        @ycor(@ycor() + @totalForce.dy)
+                    
+
+window.layout_magspring = layout_magspring                
+    
 create_turtles = (num) ->
     for i in [0...num]
         new Turtle
