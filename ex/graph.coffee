@@ -5,22 +5,20 @@
 setup = ->
     clear_all()
     make_patches
-        pxmax: 10
-        pymax: 10
-        size: 40
+        pxmax: 20
+        pymax: 20
+        size: 20
     patches.do ->
         @pcolor = color.white
     window.t = []
     for i in [0...9]
         window.t[i] = new Turtle
         window.t[i].do ->
-            @setpxy(i, Math.random() * 10)
-#            @xcor(@xcor() )
-#            @ycor(@ycor() + 15)
+            @setpxy(Math.random() * 10, Math.random() * 10)
             @heading = 0 # - Math.PI / 2
-#            @shape = 'circle'
-    window.t[8].do ->
-        @heading = @towards(window.t[0])
+            @shape = 'circle'
+#    window.t[8].do ->
+#        @heading = @towards(window.t[0])
     window.t[8].createLinkWith(window.t[0])
     window.t[1].createLinkWith(window.t[2])
     window.t[2].createLinkWith(window.t[3])

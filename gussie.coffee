@@ -179,6 +179,7 @@ class Turtle
         turtleContext.scale(@size,@size)
         turtleContext.rotate(@heading)
         if @shape == 'circle'
+            turtleContext.beginPath()            
             turtleContext.arc(0,0,patches_radius,0,2*Math.PI)
             turtleContext.fill()
         else
