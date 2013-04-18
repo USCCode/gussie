@@ -1,7 +1,7 @@
 ##....working on changing turtleset to make a copy on .with()
 #  all turtlesets should be copies, and turtles point back to their
 #   turtlesets so they can delete themselves when they die.
-# 
+#
 #gussie.coffee by jmvidal@gmail.com
 # no bugs here, just lots of newts
 #
@@ -9,16 +9,16 @@
 # Turtle.xcor and ycor are real-valued and map directly into the underlying canvas.
 # Turtle.who is an int, starting at 0
 # Patch.pxcor and pycor are ints and count the patches, starting at 0,0 in the top-left
-#  and incrementing by 1. The 
-#   
+#  and incrementing by 1. The
+#
 patchCanvas = 0
 patchContext = 0
 turtleCanvas = 0
 turtleContext = 0
 
 #The size of the patches, in canvas pixels. Patches must be square
-# 
-patches_size = 10 
+#
+patches_size = 10
 patches_radius = patches_size / 2
 
 #How many patches there will be in each direction.
@@ -31,7 +31,7 @@ canvas_height = patches_size * max_pycor
 
 #Global counter for the next who number
 who = 0
-color = 
+color =
     black: "#555555"
     white: "#FEFEFE"
     red: "#FF0000"
@@ -70,7 +70,7 @@ Array::eliminate = (element) ->
 
 if (typeof Object.create != 'function')
     Object.create =  (o) ->
-        F = -> 
+        F = ->
         F.prototype = o
         return new F()
 
@@ -81,7 +81,7 @@ if (typeof Object.create != 'function')
 class Turtle
     constructor: ->
         @_xcor = 100 # @_ means private instance variable: OBEY
-        @_ycor = 100 
+        @_ycor = 100
         @heading = 0
         @who = who++
         @color = color.red
@@ -108,7 +108,7 @@ class Turtle
 
     key: ->
         @who
-        
+
     pxcor: (px) ->
         if px?
             @xcor(px * patches_size + patches_radius)
@@ -179,7 +179,7 @@ class Turtle
         turtleContext.scale(@size,@size)
         turtleContext.rotate(@heading)
         if @shape == 'circle'
-            turtleContext.beginPath()            
+            turtleContext.beginPath()
             turtleContext.arc(0,0,patches_radius,0,2*Math.PI)
             turtleContext.fill()
         else
@@ -192,8 +192,8 @@ class Turtle
             turtleContext.fill()
         turtleContext.restore()
         return @
-        
-    setHeading: (@heading) -> 
+
+    setHeading: (@heading) ->
         return @
 
     dx: ->
@@ -227,9 +227,9 @@ class Turtle
                 otherx = @xcor() + canvas_width + dx
             dx = otherx - @xcor()
         if 2 * Math.abs(dy) > canvas_height #it is closer to go around
-            if dy > 0 
+            if dy > 0
                 othery = @ycor() - canvas_height + dy
-            if dy < 0 
+            if dy < 0
                 othery = @ycor() + canvas_height + dy
             dy = othery - @ycor()
 
@@ -270,7 +270,7 @@ class Link extends Turtle
     constructor: (@a,@b)->
         @heading = 0
         @who = who++
-        @color = color.black        
+        @color = color.black
         @directed = false
         @size = 1
         @_sets = [] #array of all the Turtlesets that I belong to
@@ -281,10 +281,10 @@ class Link extends Turtle
         @_ycor = @a.ycor()
         @face(@b) #set my direction
         length = @distance @b
-        @size = length 
+        @size = length
         @forward(@size / 2)
         return @
-        
+
     drawShape: ->
         turtleContext.save()
         turtleContext.fillStyle = @color
@@ -292,7 +292,7 @@ class Link extends Turtle
         turtleContext.lineWidth = 2 #if this is 1 then horizontal line disappears.
         turtleContext.translate(Math.round(@xcor()),Math.round(@ycor()))
         turtleContext.rotate(@heading)
-        turtleContext.beginPath()        
+        turtleContext.beginPath()
         startx = -patches_radius * @size #+ patches_radius #hit the end of the circle around b
         endx = patches_radius * @size #- patches_radius
         turtleContext.moveTo(startx,0)
@@ -314,7 +314,7 @@ class Link extends Turtle
 #
 # @with and other commands return a COPY of this turtleset, but the @_turtles themselves
 #   are not copied (that would not make sense, we only want one copy of each turtle).
-# 
+#
 class Turtleset
     constructor: (array) -> #TODO: check that array is an Array
         @_turtles = {}
@@ -385,10 +385,10 @@ class Turtleset
 
     with_max: (prop) ->
         return @max_of prop
-                
+
     max_one_of: (prop) ->
         return @max_of(prop).one_of()
-        
+
     with: (f) ->
         result = new Turtleset
         for key,turtle of @_turtles when turtle?
@@ -404,15 +404,11 @@ class Turtleset
                     result.add turtle
             else if turtle[property] == value
                 result.add turtle
-        return result        
+        return result
 
     do: (f) ->
         for key,turtle of @_turtles
             f.apply(turtle)
-
-    doOwn: (f) ->
-        for key,turtle of @_turtles
-            turtle[f]()
 
     # Remove turtle from this turtleset, nothing more.
     remove: (turtle) ->
@@ -460,10 +456,10 @@ class Patch extends Turtle
             @drawnColor = @pcolor
             patchContext.fillStyle = @pcolor
             patchContext.fillRect(@pcxcor, @pcycor, patches_size, patches_size)
-            
+
     key: ->
         @pxcor + "-" + @pycor
-        
+
     setColor: (@pcolor) ->
 
     neighbors: () ->
@@ -477,9 +473,9 @@ wrap = (x,y) ->
     y =  canvas_height + y if y < 0
     return [x,y]
 
-# Create all the patches, set window.patches variable 
+# Create all the patches, set window.patches variable
 create_patches = () ->
-    $('#world').attr('width',canvas_width).width(canvas_width) 
+    $('#world').attr('width',canvas_width).width(canvas_width)
     $('#world').attr('height',canvas_height).height(canvas_height)
     $('#patchCanvas').attr('width',canvas_width)
     $('#patchCanvas').attr('height',canvas_height)
@@ -560,26 +556,31 @@ layout_magspring = (springLength )->
         @a.do ->
             oldHeading = @heading
             @face(b)
-            if @distance(b) > springLength
+            distanceToOther = @distance(b)
+            scale = Math.abs(distanceToOther - springLength) / springLength
+            scale = scale * scale
+            if distanceToOther > springLength #then, attraction
+                aForce = new Vector(@dx(),@dy())
+                aForce = aForce.scale(scale)
+                @forces.push(aForce)
+                bForce = aForce.scale(-1)
+                b.forces.push(bForce)
+            else #repulsion
                 bForce = new Vector(@dx(),@dy())
+                bForce = bForce.scale(scale)
                 b.forces.push(bForce)
                 aForce = bForce.scale(-1)
                 @forces.push(aForce)
-            else 
-                aForce = new Vector(@dx(),@dy())
-                @forces.push(aForce)                
-                bForce = aForce.scale(-1)                
-                b.forces.push(bForce)
             @heading = oldHeading
     turtles.do ->
         @totalForce = @forces.reduce (a,b) ->
             a.add(b)
         @xcor(@xcor() + @totalForce.dx)
         @ycor(@ycor() + @totalForce.dy)
-                    
 
-window.layout_magspring = layout_magspring                
-    
+
+window.layout_magspring = layout_magspring
+
 create_turtles = (num) ->
     for i in [0...num]
         new Turtle
@@ -593,17 +594,19 @@ clear_all = ->
     redraw()
 
 window.clear_all = clear_all
-    
-    
+
+
 animate = true
 
 #Redraw everything in the canvas.
 redraw =  ->
     patches.draw()
     turtleContext.clearRect(0,0,turtleCanvas.width(), turtleCanvas.height())
-    turtles.draw()
-    links.doOwn('fixCoords')
+    links.do ->
+        @fixCoords()
     links.draw()
+    turtles.draw()
+
 
 window.redraw = redraw
 
@@ -616,14 +619,14 @@ $ ->
 # size: is the size of the patches in pixels. Patches are square.
 window.make_patches = (p) ->
     max_pxcor = p.pxmax
-    max_pycor = p.pymax    
+    max_pycor = p.pymax
     patches_size = p.size
     patches_radius = patches_size / 2
     canvas_width = patches_size * max_pxcor
     canvas_height = patches_size * max_pycor
     create_patches()
     redraw()
-    
+
 window.make_world = (p) ->
     $world = $('<div class="widget" id="world"><canvas id="patchCanvas"></canvas><canvas id="turtleCanvas"></canvas></div>')
     $world.css('top', p.top) if p.top?
@@ -643,7 +646,7 @@ _forever_call = (f, id) ->
             f()
             setTimeout fun,0
     return fun
-    
+
 window.make_button = (p) ->
     id = p.id
     if p.toggle?
@@ -684,4 +687,3 @@ window.make_slider = (p) ->
 #   graph-oriented programming: Following Sussman's paper where a node
 #   holds variables and edges represnt evidence for the vars' values.
 # combinatorial auction
-

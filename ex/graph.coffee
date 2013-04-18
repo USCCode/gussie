@@ -1,4 +1,4 @@
-# 
+#
 #
 #
 
@@ -27,10 +27,10 @@ setup = ->
 
 
 go = ->
-    layout_magspring(10)
+    layout_magspring(1)
     redraw()
-    
-    
+
+
 $ ->
     make_world
         top: 30
@@ -48,7 +48,7 @@ $ ->
         left: 100
         label: 'Step'
         id: 'stepButton'
-        click: go        
+        click: go
     make_button
         top: 50
         left: 180
@@ -57,4 +57,3 @@ $ ->
         click: go
         toggle: true
     console.log('all systems go')
-
