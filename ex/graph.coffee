@@ -17,19 +17,27 @@ setup = ->
             @setpxy(Math.random() * 10, Math.random() * 10)
             @heading = 0 # - Math.PI / 2
             @shape = 'circle'
-#    window.t[8].do ->
-#        @heading = @towards(window.t[0])
-    window.t[8].createLinkWith(window.t[0])
-    window.t[1].createLinkWith(window.t[2])
-    window.t[2].createLinkWith(window.t[3])
-    window.t[2].createLinkWith(window.t[4])
+    turtles.do ->
+        @createLinkWith(turtles.one_of())
     redraw()
 
+
+mouseIsDown = false
+chosen = null
 
 go = ->
     layout_magspring(1)
     redraw()
 
+handleClick = (e) ->
+    console.log e.offsetX + ',' + e.offsetY
+    mouseIseDown = true
+    chosen = turtles.min_one_of ->
+        @distancexy(e.offsetX,e.offsetY)
+    chosen.setxy(e.offsetX,e.offsetY)
+
+handleMove = (e) ->
+    chosen.setxy(e.offsetX,e.offsetY) if chosen?
 
 $ ->
     make_world
@@ -56,4 +64,10 @@ $ ->
         id: 'goButton'
         click: go
         toggle: true
+    $('#world').on('mousedown', handleClick)
+    $('#world').on('mousemove', handleMove)
+    $('#world').on('mouseup', ->
+        mouseIsDown = false
+        chosen = null
+        )
     console.log('all systems go')

@@ -130,9 +130,12 @@ class Turtle
     myLinks: -> @_myLinks
 
     createLinkWith: (other) ->
+        if other == @
+            return @
         link = new Link(@,other)
         @myLinks.add(link)
         other.myLinks.add(link)
+        return @
 
     linkNeighbors: ->
         myself = @
@@ -375,6 +378,7 @@ class Turtleset
     min_n_of: (prop, n) ->
 
     #Returns one of the turtles with a min value for prop.
+    # prop can be a function or a string.
     min_one_of: (prop) ->
         return @min_of(prop).one_of()
 
@@ -389,6 +393,7 @@ class Turtleset
     max_one_of: (prop) ->
         return @max_of(prop).one_of()
 
+    #Return turtles with f, that is, for which f evaluates to true.
     with: (f) ->
         result = new Turtleset
         for key,turtle of @_turtles when turtle?
@@ -396,9 +401,11 @@ class Turtleset
                 result.add turtle
         return result
 
+    #Return turtles t for which property has value,
+    # or, if property is a function, for which property evaluates to true
     withPV: (property, value) ->
         result = new Turtleset
-        for key,turtle of result.turtles
+        for key,turtle of @_turtles
             if property instanceof Function
                 if property.apply(turtle) == value
                     result.add turtle
