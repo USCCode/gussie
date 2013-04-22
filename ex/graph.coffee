@@ -27,6 +27,8 @@ chosen = null
 
 go = ->
     layout_magspring(1)
+    if chosen?
+        chosen.setxy(chosen.mousex, chosen.mousey)
     redraw()
 
 handleClick = (e) ->
@@ -35,9 +37,13 @@ handleClick = (e) ->
     chosen = turtles.min_one_of ->
         @distancexy(e.offsetX,e.offsetY)
     chosen.setxy(e.offsetX,e.offsetY)
+    chosen.mousex = e.offsetX
+    chosen.mousey = e.offsetY
 
 handleMove = (e) ->
-    chosen.setxy(e.offsetX,e.offsetY) if chosen?
+    if chosen?
+        chosen.mousex = e.offsetX
+        chosen.mousey = e.offsetY
 
 $ ->
     make_world
