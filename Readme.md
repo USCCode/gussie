@@ -4,7 +4,7 @@ A coffescript library for agent-based modeling.
 
 Still in development. That is, nothing works.
 
-A few examples are ex/
+A couple of examples are in ex/ which should be viewable at <a href="http://jmvidal.cse.sc.edu/gussie/">http://jmvidal.cse.sc.edu/gussie/</a>.
 
 ## Goals
 
