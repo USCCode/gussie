@@ -2,3 +2,6 @@ gussie.js
 *.min.js
 ex/*.js
 .DS_Store
+.zedstate
+npm-debug.log
+tags
