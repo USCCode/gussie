@@ -1,4 +1,4 @@
-##....working on changing turtleset to make a copy on .with()
+##....working on changing turtleset to make a copy on .with()$$
 #  all turtlesets should be copies, and turtles point back to their
 #   turtlesets so they can delete themselves when they die.
 #
@@ -147,6 +147,7 @@ class Turtle
 
     draw: ->
         @drawShape()
+        return @ if not wraparound
 
         # Calculate wraparound coordinates: NOTE: this only works for
         # shapes that wrap around ONCE, and no more. It does not handle bigger shapes.
@@ -211,7 +212,7 @@ class Turtle
         dy = Math.sin(this.heading) * distance
         @xcor(@xcor() + dx)
         @ycor(@ycor() + dy)
-        [x, y] = wrap(@xcor(),@ycor())
+        [x, y] = wrap(@xcor(),@ycor()) if wraparound
         @xcor(x)
         @ycor(y)
         return @
@@ -222,19 +223,20 @@ class Turtle
         dx = otherx - @xcor()
         dy = othery - @ycor()
 
-        #Wraparound fix
-        if 2 * Math.abs(dx) > canvas_width #it is closer to go around
-            if dx > 0 #he is to my right
-                otherx = @xcor() - canvas_width + dx
-            if dx < 0 #he is to my left
-                otherx = @xcor() + canvas_width + dx
-            dx = otherx - @xcor()
-        if 2 * Math.abs(dy) > canvas_height #it is closer to go around
-            if dy > 0
-                othery = @ycor() - canvas_height + dy
-            if dy < 0
-                othery = @ycor() + canvas_height + dy
-            dy = othery - @ycor()
+        if wraparound
+            #Wraparound fix
+            if 2 * Math.abs(dx) > canvas_width #it is closer to go around
+                if dx > 0 #he is to my right
+                    otherx = @xcor() - canvas_width + dx
+                if dx < 0 #he is to my left
+                    otherx = @xcor() + canvas_width + dx
+                dx = otherx - @xcor()
+            if 2 * Math.abs(dy) > canvas_height #it is closer to go around
+                if dy > 0
+                    othery = @ycor() - canvas_height + dy
+                if dy < 0
+                    othery = @ycor() + canvas_height + dy
+                dy = othery - @ycor()
 
         angle = Math.atan (dy / dx)
         angle = angle + Math.PI if dx < 0
@@ -619,7 +621,7 @@ window.redraw = redraw
 
 #Setup the canvas global variables
 $ ->
-    console.log('ready')
+    console.log('I am ready')
 
 #Create the patches, according to the user's need
 # pxmax,pymax are the number of patches in each dimension.
@@ -634,8 +636,11 @@ window.make_patches = (p) ->
     create_patches()
     redraw()
 
+wraparound = true
+
 window.make_world = (p) ->
     $world = $('<div class="widget" id="world"><canvas id="patchCanvas"></canvas><canvas id="turtleCanvas"></canvas></div>')
+    wraparound = p.wraparound if p.wraparound?
     $world.css('top', p.top) if p.top?
     $world.css('left', p.left) if p.left?
     $world.width p.width if p.width?

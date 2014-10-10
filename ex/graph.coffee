@@ -51,6 +51,7 @@ $ ->
         left: 300
         width: 400
         height: 400
+        wraparound: true
     make_button
         top: 50
         left: 10
